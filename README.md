@@ -146,6 +146,7 @@ curl -X POST http://localhost:5001/<PROJECT_ID>/asia-south1/sync_mobile_diagnost
 
 - **System B (Mobile)**: [Coconut Pathology Training Notebook](file:///f:/GitHub/Research/Coconut-Pathology-Detection-Service/notebooks/coconut_pathology_training.ipynb)
   - Targets MobileNetV2 with INT8 quantization for <35ms latency.
+  - **Dataset V2**: Now includes 6 classes including a **Healthy** baseline.
   - Optimized for React Native on-device inference.
 
 ### Model Weights
