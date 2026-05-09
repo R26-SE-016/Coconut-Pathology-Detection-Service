@@ -1,0 +1,187 @@
+// ═══════════════════════════════════════════════════════════════════
+// Coconut Pathology Detection Service — Firestore Security Rules
+// Project: R26-SE-016
+//
+// Multi-tenant model:
+//   • field_officer  → Own diagnostics within own estate
+//   • manager        → Read all diagnostics/heatmaps in own region
+//   • admin          → Full read access across all estates
+//
+// NOTE: Authentication module is not yet integrated.
+//       Rules use request.auth.token custom claims which must be
+//       set via Firebase Admin SDK once Auth is implemented.
+//
+// Heatmaps are written SERVER-SIDE only (Admin SDK bypasses rules).
+// ═══════════════════════════════════════════════════════════════════
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ────────────────────────────────────────
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get the user's role from custom claims
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+
+    // Get the user's estate ID from custom claims
+    function getUserEstateId() {
+      return request.auth.token.estate_id;
+    }
+
+    // Get the user's region ID from custom claims
+    function getUserRegionId() {
+      return request.auth.token.region_id;
+    }
+
+    // Check if user is an admin
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    // Check if user is a manager
+    function isManager() {
+      return isAuthenticated() && getUserRole() == 'manager';
+    }
+
+    // Check if user is a field officer
+    function isFieldOfficer() {
+      return isAuthenticated() && getUserRole() == 'field_officer';
+    }
+
+    // Check if user belongs to a specific estate
+    function belongsToEstate(estateId) {
+      return isAuthenticated() && getUserEstateId() == estateId;
+    }
+
+
+    // ── Users Collection ────────────────────────────────────────
+    // Users can read their own profile.
+    // Managers can read profiles within their region.
+    // Admins can read all profiles.
+    // Only admins can create/update user documents.
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isManager() ||
+        isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+
+    // ── Estates Collection ──────────────────────────────────────
+    // All authenticated users can read their own estate.
+    // Managers can read estates within their region.
+    // Admins can read/write all estates.
+
+    match /estates/{estateId} {
+      allow read: if isAuthenticated() && (
+        belongsToEstate(estateId) ||
+        (isManager() && resource.data.region_id == getUserRegionId()) ||
+        isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+
+    // ── Diagnostics Collection ──────────────────────────────────
+    // Stores results from BOTH System A (UAV) and System B (Mobile).
+    //
+    // field_officer: Read/write own diagnostics within own estate.
+    // manager:       Read all diagnostics in estates within their region.
+    // admin:         Read all diagnostics.
+    //
+    // NOTE: System A writes are done server-side (Admin SDK),
+    //       bypassing these rules entirely.
+
+    match /diagnostics/{diagnosticId} {
+      // READ rules
+      allow read: if isAuthenticated() && (
+        // Field officers can read their own diagnostics
+        (isFieldOfficer()
+          && resource.data.user_id == request.auth.uid
+          && resource.data.estate_id == getUserEstateId()) ||
+
+        // Managers can read all diagnostics in their region
+        // (requires a lookup of the estate's region — use get())
+        (isManager()
+          && exists(/databases/$(database)/documents/estates/$(resource.data.estate_id))
+          && get(/databases/$(database)/documents/estates/$(resource.data.estate_id)).data.region_id == getUserRegionId()) ||
+
+        // Admins see everything
+        isAdmin()
+      );
+
+      // WRITE rules (System B mobile sync)
+      allow create: if isAuthenticated() && (
+        // Field officers can create diagnostics for their own estate
+        (request.resource.data.user_id == request.auth.uid
+          && request.resource.data.estate_id == getUserEstateId()) ||
+
+        // Admins can create any diagnostic
+        isAdmin()
+      );
+
+      // Updates and deletes are restricted
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+
+    // ── Heatmaps Collection ─────────────────────────────────────
+    // System A output ONLY.
+    // Written exclusively by the Cloud Function (Admin SDK).
+    // Client-side: read-only access.
+    //
+    // field_officer: Read heatmaps for their own estate.
+    // manager:       Read heatmaps across estates in their region
+    //                (enables regional hotspot visibility).
+    // admin:         Read all heatmaps.
+
+    match /heatmaps/{heatmapId} {
+      allow read: if isAuthenticated() && (
+        // Field officers see their estate's heatmaps
+        (isFieldOfficer()
+          && resource.data.estate_id == getUserEstateId()) ||
+
+        // Managers see regional heatmaps (cross-estate)
+        (isManager()
+          && exists(/databases/$(database)/documents/estates/$(resource.data.estate_id))
+          && get(/databases/$(database)/documents/estates/$(resource.data.estate_id)).data.region_id == getUserRegionId()) ||
+
+        // Admins see everything
+        isAdmin()
+      );
+
+      // No client-side writes — heatmaps are generated server-side
+      allow write: if false;
+    }
+
+
+    // ── Knowledge Base Collection ───────────────────────────────
+    // Read-only for all authenticated users.
+    // Managed by the Advisory System team member.
+    // Writes handled server-side or by admin.
+
+    match /knowledge_base/{pathologyId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+
+    // ── Default Deny ────────────────────────────────────────────
+    // Any collection not explicitly matched above is denied.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

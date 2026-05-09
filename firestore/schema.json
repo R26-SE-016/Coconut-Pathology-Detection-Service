@@ -1,0 +1,84 @@
+{
+  "$schema": "Firestore Schema — R26-SE-016",
+  "collections": {
+    "users": {
+      "path": "users/{userId}",
+      "fields": {
+        "display_name": { "type": "string", "required": true },
+        "email": { "type": "string", "required": true },
+        "role": { "type": "string", "enum": ["field_officer", "manager", "admin"], "required": true },
+        "estate_id": { "type": "string", "required": true },
+        "region_id": { "type": "string", "required": true },
+        "device_ids": { "type": "array", "items": "string" },
+        "created_at": { "type": "timestamp" },
+        "updated_at": { "type": "timestamp" }
+      }
+    },
+    "estates": {
+      "path": "estates/{estateId}",
+      "fields": {
+        "name": { "type": "string", "required": true },
+        "region_id": { "type": "string", "required": true },
+        "geo_bounds": { "type": "map", "fields": { "ne": "geopoint", "sw": "geopoint" } },
+        "area_hectares": { "type": "number" },
+        "manager_ids": { "type": "array", "items": "string" },
+        "owner_id": { "type": "string" },
+        "created_at": { "type": "timestamp" }
+      }
+    },
+    "diagnostics": {
+      "path": "diagnostics/{diagnosticId}",
+      "note": "Shared collection for BOTH independent systems. 'source' field distinguishes origin.",
+      "fields": {
+        "user_id": { "type": "string", "required": true },
+        "device_id": { "type": "string" },
+        "estate_id": { "type": "string", "required": true },
+        "disease_class": { "type": "string", "required": true },
+        "confidence": { "type": "number", "min": 0, "max": 1, "required": true },
+        "location": { "type": "geopoint", "required": true },
+        "source": { "type": "string", "enum": ["mobile_v2", "uav_yolo"], "required": true },
+        "image_ref": { "type": "string" },
+        "local_id": { "type": "string" },
+        "captured_at": { "type": "string" },
+        "synced_at": { "type": "string" },
+        "created_at": { "type": "timestamp" }
+      },
+      "indexes": [
+        { "fields": ["estate_id", "created_at"], "order": "DESCENDING" },
+        { "fields": ["user_id", "created_at"], "order": "DESCENDING" },
+        { "fields": ["estate_id", "disease_class"] },
+        { "fields": ["estate_id", "source"] }
+      ]
+    },
+    "heatmaps": {
+      "path": "heatmaps/{heatmapId}",
+      "note": "System A ONLY — UAV YOLOv11 pipeline output.",
+      "fields": {
+        "estate_id": { "type": "string", "required": true },
+        "image_ref": { "type": "string", "required": true },
+        "image_dimensions": { "type": "map", "fields": { "width": "number", "height": "number" } },
+        "detections": { "type": "array", "items": { "bbox": "number[]", "class": "string", "confidence": "number", "category_id": "number" } },
+        "summary": { "type": "map", "fields": { "total": "number", "by_class": "map" } },
+        "created_at": { "type": "string" },
+        "processed_at": { "type": "timestamp" },
+        "processed_by": { "type": "string" }
+      },
+      "indexes": [
+        { "fields": ["estate_id", "created_at"], "order": "DESCENDING" }
+      ]
+    },
+    "knowledge_base": {
+      "path": "knowledge_base/{pathologyId}",
+      "note": "RESERVED — Managed by Advisory System team member.",
+      "fields": {
+        "common_name": { "type": "string" },
+        "scientific_name": { "type": "string" },
+        "symptoms": { "type": "array" },
+        "treatment_protocols": { "type": "array" },
+        "vernacular_advice": { "type": "string" },
+        "severity_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "source": { "type": "string" }
+      }
+    }
+  }
+}
