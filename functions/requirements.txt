@@ -1,0 +1,30 @@
+# ══════════════════════════════════════════════════════════════════════
+# Coconut Pathology Detection Service — Python Dependencies
+# Firebase Cloud Functions (Gen 2)
+#
+# NOTE: For CPU-only PyTorch (recommended for Cloud Functions),
+# uncomment the --extra-index-url line and use the +cpu variants.
+# ══════════════════════════════════════════════════════════════════════
+
+# ── Firebase & Google Cloud ──────────────────────────────────────────
+firebase-functions>=0.4.0
+firebase-admin>=6.4.0
+google-cloud-firestore>=2.16.0
+google-cloud-storage>=2.14.0
+
+# ── Deep Learning (System A — YOLOv11 + SAHI) ───────────────────────
+ultralytics>=8.2.0
+sahi>=0.11.18
+
+# ── PyTorch (CPU-only for serverless) ────────────────────────────────
+# Uncomment the line below for CPU-only wheels (reduces deploy size ~60%)
+# --extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1.0
+torchvision>=0.16.0
+
+# ── Image Processing ────────────────────────────────────────────────
+Pillow>=10.2.0
+numpy>=1.26.0
+
+# ── Utilities ────────────────────────────────────────────────────────
+python-dateutil>=2.8.0
