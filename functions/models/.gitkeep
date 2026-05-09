@@ -1,0 +1,2 @@
+# This directory holds the bundled YOLOv11 model weights.
+# Place your trained coconut_yolov11.pt file here before deployment.
