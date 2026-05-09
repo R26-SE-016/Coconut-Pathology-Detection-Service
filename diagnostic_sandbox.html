@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coconut Pathology Diagnostic Sandbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite/dist/tf-tflite.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-weight: 600;
+            margin: 0;
+            background: linear-gradient(to right, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 350px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        #preview-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .results-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .confidence-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s ease-out;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: auto;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+
+        #json-preview {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            color: #10b981;
+            background: #000;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Coconut Pathology Sandbox</h1>
+            <p>System B — MobileNetV2 INT8 Model Verification</p>
+        </header>
+
+        <div class="main-layout">
+            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                <div id="upload-prompt">
+                    <span style="font-size: 40px">📸</span>
+                    <p>Click or Drag Image to Diagnose</p>
+                </div>
+                <img id="preview-img" style="display: none">
+                <input type="file" id="file-input" hidden accept="image/*">
+                <div class="loading-overlay" id="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <div class="stat-card">
+                    <div class="stat-label">Diagnosis</div>
+                    <div class="stat-value" id="res-class">---</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Confidence Score</div>
+                    <div class="stat-value" id="res-conf">0.0%</div>
+                    <div class="confidence-bar-bg">
+                        <div class="confidence-bar-fill" id="conf-fill"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sync Payload Preview</div>
+                    <div id="json-preview">{ "status": "waiting" }</div>
+                </div>
+                <button onclick="syncToCloud()" id="sync-btn">🚀 Sync to Cloud</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let model;
+        const CLASS_NAMES = ['BudRootDropping', 'BudRot', 'GrayLeafSpot', 'Healthy', 'LeafRot', 'StemBleeding'];
+
+        async function initModel() {
+            document.getElementById('loading').style.display = 'flex';
+            try {
+                // Load the TFLite model. Expects model to be in the same directory.
+                model = await tflite.loadTFLiteModel('./system_b_baseline_int8.tflite');
+                console.log("Model Loaded Successfully");
+            } catch (e) {
+                console.error("Model Load Failed:", e);
+                alert("Model file not found. Ensure 'system_b_baseline_int8.tflite' is in the same folder as this HTML file.");
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        document.getElementById('file-input').onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async event => {
+                const img = document.getElementById('preview-img');
+                img.src = event.target.result;
+                img.style.display = 'block';
+                document.getElementById('upload-prompt').style.display = 'none';
+
+                // Wait for image to load before inference
+                img.onload = () => runInference(img);
+            };
+            reader.readAsDataURL(file);
+        };
+
+        async function runInference(imgElement) {
+            if (!model) {
+                alert("Model is still loading...");
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'flex';
+
+            // 1. Preprocess: INT8 models REQUIRE int32/uint8 inputs (0-255)
+            const tensor = tf.tidy(() => {
+                return tf.browser.fromPixels(imgElement)
+                    .resizeNearestNeighbor([224, 224])
+                    .expandDims(0)
+                    .cast('int32'); // Correct type for TFLite INT8
+            });
+
+            try {
+                // 2. Predict
+                const output = model.predict(tensor);
+                const probs = await output.data();
+                
+                // 3. Post-process
+                let maxIdx = 0;
+                let maxVal = -1;
+                for (let i = 0; i < probs.length; i++) {
+                    if (probs[i] > maxVal) {
+                        maxVal = probs[i];
+                        maxIdx = i;
+                    }
+                }
+
+                // INT8 outputs are 0-255. Convert to 0-1 probability.
+                const confidence = maxVal > 1.0 ? maxVal / 255 : maxVal;
+                
+                const className = CLASS_NAMES[maxIdx] || "Unknown";
+                const confPct = (confidence * 100).toFixed(1);
+
+                // 4. Update UI
+                document.getElementById('res-class').innerText = className;
+                document.getElementById('res-conf').innerText = confPct + "%";
+                document.getElementById('conf-fill').style.width = confPct + "%";
+                document.getElementById('conf-fill').style.background = (className === 'Healthy') ? '#10b981' : '#f59e0b';
+
+                const payload = {
+                    user_id: "web_sandbox_user",
+                    device_id: "browser_emulator",
+                    estate_id: "test_estate_001",
+                    batch: [{
+                        disease_class: className,
+                        confidence: parseFloat(confidence.toFixed(4)),
+                        gps: { lat: 7.2906, lng: 80.6337 },
+                        captured_at: new Date().toISOString(),
+                        source: "mobile_v2"
+                    }]
+                };
+                document.getElementById('json-preview').innerText = JSON.stringify(payload, null, 2);
+            } catch (e) {
+                console.error("Inference failed:", e);
+                alert("Inference Error: " + e.message);
+            } finally {
+                tensor.dispose();
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function syncToCloud() {
+            const payloadStr = document.getElementById('json-preview').innerText;
+            const payload = JSON.parse(payloadStr);
+
+            if (payload.status === "waiting") {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            const btn = document.getElementById('sync-btn');
+            btn.innerText = "⏳ Syncing...";
+            btn.disabled = true;
+
+            try {
+                // Update this URL once you deploy your Firebase Function
+                const URL = "http://localhost:5001/asia-south1/sync_mobile_diagnostics";
+
+                const response = await fetch(URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                alert("Sync Successful! Synced Count: " + result.synced_count);
+            } catch (e) {
+                alert("Sync Failed. Ensure Firebase Emulator is running or update the URL in diagnostic_sandbox.html");
+                console.error(e);
+            } finally {
+                btn.innerText = "🚀 Sync to Cloud";
+                btn.disabled = false;
+            }
+        }
+
+        initModel();
+    </script>
+
+</body>
+
+</html>

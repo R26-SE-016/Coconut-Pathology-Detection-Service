@@ -1,0 +1,373 @@
+[debug] [2026-05-09T21:43:38.442Z] ----------------------------------------------------------------------
+[debug] [2026-05-09T21:43:38.449Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\janit\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
+[debug] [2026-05-09T21:43:38.449Z] CLI Version:   15.17.0
+[debug] [2026-05-09T21:43:38.449Z] Platform:      win32
+[debug] [2026-05-09T21:43:38.449Z] Node Version:  v22.14.0
+[debug] [2026-05-09T21:43:38.450Z] Time:          Sun May 10 2026 03:13:38 GMT+0530 (India Standard Time)
+[debug] [2026-05-09T21:43:38.450Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-09T21:43:40.082Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-09T21:43:40.083Z] > authorizing via signed-in user (janithasuranjana2001@gmail.com)
+[debug] [2026-05-09T21:43:40.133Z] openjdk version "25.0.3" 2026-04-21 LTS
+OpenJDK Runtime Environment Temurin-25.0.3+9 (build 25.0.3+9-LTS)
+
+[debug] [2026-05-09T21:43:40.134Z] OpenJDK 64-Bit Server VM Temurin-25.0.3+9 (build 25.0.3+9-LTS, mixed mode, sharing)
+
+[debug] [2026-05-09T21:43:40.141Z] Parsed Java major version: 25
+[info] i  emulators: Starting emulators: functions, firestore, storage, extensions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: functions, firestore, storage, extensions"}}
+[debug] [2026-05-09T21:43:40.143Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:40.143Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:40.144Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/coconut-pathology-detection/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2026-05-09T21:43:40.144Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/coconut-pathology-detection/services/cloudresourcemanager.googleapis.com  x-goog-user-project=coconut-pathology-detection
+[debug] [2026-05-09T21:43:41.788Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/coconut-pathology-detection/services/cloudresourcemanager.googleapis.com 200
+[debug] [2026-05-09T21:43:41.788Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/coconut-pathology-detection/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2026-05-09T21:43:41.791Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:41.791Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:41.791Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/coconut-pathology-detection [none]
+[debug] [2026-05-09T21:43:43.225Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/coconut-pathology-detection 200
+[debug] [2026-05-09T21:43:43.226Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/coconut-pathology-detection {"projectNumber":"75673800398","projectId":"coconut-pathology-detection","lifecycleState":"ACTIVE","name":"Coconut-Pathology-Detection","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-05-09T21:20:06.805Z"}
+[debug] [2026-05-09T21:43:43.258Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.258Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.258Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.258Z] [storage] Storage Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.258Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"storage":[{"address":"127.0.0.1","family":"IPv4","port":9199}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-05-09T21:43:43.264Z] Write emulator hub locator at C:\Users\janit\AppData\Local\Temp\hub-coconut-pathology-detection.json
+[debug] [2026-05-09T21:43:43.271Z] [Extensions] Started Extensions emulator, this is a noop.
+[debug] [2026-05-09T21:43:43.275Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.275Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.275Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-09T21:43:43.275Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"storage":[{"address":"127.0.0.1","family":"IPv4","port":9199}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] !  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, database, hosting, pubsub, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, auth, database, hosting, pubsub, dataconnect\u001b[22m"}}
+[debug] [2026-05-09T21:43:43.330Z] defaultcredentials: writing to file C:\Users\janit\AppData\Roaming\firebase\janithasuranjana2001_gmail_com_application_default_credentials.json
+[debug] [2026-05-09T21:43:43.334Z] Setting GAC to C:\Users\janit\AppData\Roaming\firebase\janithasuranjana2001_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\janit\\AppData\\Roaming\\firebase\\janithasuranjana2001_gmail_com_application_default_credentials.json"}}
+[debug] [2026-05-09T21:43:43.335Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:43.335Z] Checked if tokens are valid: true, expires at: 1778365624910
+[debug] [2026-05-09T21:43:43.335Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/coconut-pathology-detection/adminSdkConfig [none]
+[debug] [2026-05-09T21:43:44.149Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/coconut-pathology-detection/adminSdkConfig 200
+[debug] [2026-05-09T21:43:44.150Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/coconut-pathology-detection/adminSdkConfig {"projectId":"coconut-pathology-detection","storageBucket":"coconut-pathology-detection.firebasestorage.app"}
+[info] i  firestore: downloading cloud-firestore-emulator-v1.21.0.jar... {"metadata":{"emulator":{"name":"firestore"},"message":"downloading cloud-firestore-emulator-v1.21.0.jar..."}}
+[debug] [2026-05-09T21:43:44.202Z] >>> [apiv2][query] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.21.0.jar 
+[debug] [2026-05-09T21:43:44.750Z] <<< [apiv2][status] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.21.0.jar 200
+[debug] [2026-05-09T21:43:44.750Z] <<< [apiv2][body] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.21.0.jar [stream]
+[debug] [2026-05-09T21:44:11.941Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2026-05-09T21:44:11.941Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2026-05-09T21:44:11.941Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\janit\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.21.0.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--database-edition","standard","--project_id","coconut-pathology-detection","--rules","F:\\GitHub\\Research\\Coconut-Pathology-Detection-Service\\firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","database-edition","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\janit\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.21.0.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--database-edition\",\"standard\",\"--project_id\",\"coconut-pathology-detection\",\"--rules\",\"F:\\\\GitHub\\\\Research\\\\Coconut-Pathology-Detection-Service\\\\firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"database-edition\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2026-05-09T21:44:12.443Z] WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/C:/Users/janit/.cache/firebase/emulators/cloud-firestore-emulator-v1.21.0.jar)
+WARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2
+WARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release
+ {"metadata":{"emulator":{"name":"firestore"},"message":"WARNING: A terminally deprecated method in sun.misc.Unsafe has been called\nWARNING: sun.misc.Unsafe::allocateMemory has been called by io.netty.util.internal.PlatformDependent0$2 (file:/C:/Users/janit/.cache/firebase/emulators/cloud-firestore-emulator-v1.21.0.jar)\nWARNING: Please consider reporting this to the maintainers of class io.netty.util.internal.PlatformDependent0$2\nWARNING: sun.misc.Unsafe::allocateMemory will be removed in a future release\r\n"}}
+[debug] [2026-05-09T21:44:14.480Z] May 10, 2026 3:14:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 10, 2026 3:14:14 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\r\nINFO: Started WebSocket server on ws://127.0.0.1:9150\r\n"}}
+[debug] [2026-05-09T21:44:14.538Z] 
+API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://"}}
+[debug] [2026-05-09T21:44:14.538Z] 127.0.0.1:8080
+Database Edition: STANDARD
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\nDatabase Edition: STANDARD\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\r\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\r\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\r\nDev App Server is now running.\n\r\n"}}
+[info] +  firestore: Firestore Emulator was started in standard edition. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator was started in standard edition."}}
+[info] +  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[info] i  storage: downloading cloud-storage-rules-runtime-v1.1.3.jar... {"metadata":{"emulator":{"name":"storage"},"message":"downloading cloud-storage-rules-runtime-v1.1.3.jar..."}}
+[debug] [2026-05-09T21:44:14.630Z] >>> [apiv2][query] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-storage-rules-runtime-v1.1.3.jar 
+[debug] [2026-05-09T21:44:14.948Z] <<< [apiv2][status] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-storage-rules-runtime-v1.1.3.jar 200
+[debug] [2026-05-09T21:44:14.948Z] <<< [apiv2][body] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-storage-rules-runtime-v1.1.3.jar [stream]
+[debug] [2026-05-09T21:44:25.226Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"storage"},"message":"Ignoring unsupported arg: port"}}
+[warn] !  Unexpected rules runtime error: WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf.UnsafeUtil$MemoryAccessor (file:/C:/Users/janit/.cache/firebase/emulators/cloud-storage-rules-runtime-v1.1.3.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.protobuf.UnsafeUtil$MemoryAccessor
+WARNING: sun.misc.Unsafe::arrayBaseOffset will be removed in a future release
+ {"metadata":{"emulator":{"name":"storage"},"message":"Unexpected rules runtime error: WARNING: A terminally deprecated method in sun.misc.Unsafe has been called\nWARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf.UnsafeUtil$MemoryAccessor (file:/C:/Users/janit/.cache/firebase/emulators/cloud-storage-rules-runtime-v1.1.3.jar)\nWARNING: Please consider reporting this to the maintainers of class com.google.protobuf.UnsafeUtil$MemoryAccessor\nWARNING: sun.misc.Unsafe::arrayBaseOffset will be removed in a future release\r\n"}}
+[debug] [2026-05-09T21:44:26.253Z] Temp file directory for storage emulator: C:\Users\janit\AppData\Local\Temp/firebase/storage/blobs {"metadata":{"emulator":{"name":"storage"},"message":"Temp file directory for storage emulator: C:\\Users\\janit\\AppData\\Local\\Temp/firebase/storage/blobs"}}
+[info] i  ui: downloading ui-v1.15.0.zip... {"metadata":{"emulator":{"name":"ui"},"message":"downloading ui-v1.15.0.zip..."}}
+[debug] [2026-05-09T21:44:26.269Z] >>> [apiv2][query] GET https://storage.googleapis.com/firebase-preview-drop/emulator/ui-v1.15.0.zip 
+[debug] [2026-05-09T21:44:26.594Z] <<< [apiv2][status] GET https://storage.googleapis.com/firebase-preview-drop/emulator/ui-v1.15.0.zip 200
+[debug] [2026-05-09T21:44:26.595Z] <<< [apiv2][body] GET https://storage.googleapis.com/firebase-preview-drop/emulator/ui-v1.15.0.zip [stream]
+[debug] [2026-05-09T21:44:28.285Z] Data is 3538469
+[debug] [2026-05-09T21:44:28.286Z] [unzip] Entry: client/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.286Z] [unzip] Processing entry: client\
+[debug] [2026-05-09T21:44:28.286Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\
+[debug] [2026-05-09T21:44:28.287Z] [unzip] Entry: client/favicon-16x16.png (compressed_size=293 bytes, uncompressed_size=293 bytes)
+[debug] [2026-05-09T21:44:28.288Z] [unzip] Processing entry: client\favicon-16x16.png
+[debug] [2026-05-09T21:44:28.288Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.288Z] [unzip] Writing file: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\favicon-16x16.png
+[debug] [2026-05-09T21:44:28.289Z] [unzip] Entry: client/safari-pinned-tab.svg (compressed_size=1433 bytes, uncompressed_size=2611 bytes)
+[debug] [2026-05-09T21:44:28.289Z] [unzip] Processing entry: client\safari-pinned-tab.svg
+[debug] [2026-05-09T21:44:28.289Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.289Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\safari-pinned-tab.svg
+[debug] [2026-05-09T21:44:28.294Z] [unzip] Entry: client/favicon.ico (compressed_size=2933 bytes, uncompressed_size=13294 bytes)
+[debug] [2026-05-09T21:44:28.294Z] [unzip] Processing entry: client\favicon.ico
+[debug] [2026-05-09T21:44:28.294Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.295Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\favicon.ico
+[debug] [2026-05-09T21:44:28.296Z] [unzip] Entry: client/index.html (compressed_size=1364 bytes, uncompressed_size=3071 bytes)
+[debug] [2026-05-09T21:44:28.296Z] [unzip] Processing entry: client\index.html
+[debug] [2026-05-09T21:44:28.296Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.296Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\index.html
+[debug] [2026-05-09T21:44:28.297Z] [unzip] Entry: client/android-chrome-192x192.png (compressed_size=2684 bytes, uncompressed_size=2684 bytes)
+[debug] [2026-05-09T21:44:28.297Z] [unzip] Processing entry: client\android-chrome-192x192.png
+[debug] [2026-05-09T21:44:28.297Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.298Z] [unzip] Writing file: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\android-chrome-192x192.png
+[debug] [2026-05-09T21:44:28.298Z] [unzip] Entry: client/apple-touch-icon.png (compressed_size=2123 bytes, uncompressed_size=2152 bytes)
+[debug] [2026-05-09T21:44:28.299Z] [unzip] Processing entry: client\apple-touch-icon.png
+[debug] [2026-05-09T21:44:28.299Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.299Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\apple-touch-icon.png
+[debug] [2026-05-09T21:44:28.301Z] [unzip] Entry: client/android-chrome-512x512.png (compressed_size=5369 bytes, uncompressed_size=5411 bytes)
+[debug] [2026-05-09T21:44:28.301Z] [unzip] Processing entry: client\android-chrome-512x512.png
+[debug] [2026-05-09T21:44:28.301Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.301Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\android-chrome-512x512.png
+[debug] [2026-05-09T21:44:28.302Z] [unzip] Entry: client/manifest.json (compressed_size=245 bytes, uncompressed_size=551 bytes)
+[debug] [2026-05-09T21:44:28.302Z] [unzip] Processing entry: client\manifest.json
+[debug] [2026-05-09T21:44:28.302Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.303Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\manifest.json
+[debug] [2026-05-09T21:44:28.304Z] [unzip] Entry: client/robots.txt (compressed_size=26 bytes, uncompressed_size=26 bytes)
+[debug] [2026-05-09T21:44:28.304Z] [unzip] Processing entry: client\robots.txt
+[debug] [2026-05-09T21:44:28.304Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.305Z] [unzip] Writing file: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\robots.txt
+[debug] [2026-05-09T21:44:28.306Z] [unzip] Entry: client/mstile-150x150.png (compressed_size=2034 bytes, uncompressed_size=2034 bytes)
+[debug] [2026-05-09T21:44:28.306Z] [unzip] Processing entry: client\mstile-150x150.png
+[debug] [2026-05-09T21:44:28.306Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.306Z] [unzip] Writing file: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\mstile-150x150.png
+[debug] [2026-05-09T21:44:28.307Z] [unzip] Entry: client/assets/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.308Z] [unzip] Processing entry: client\assets\
+[debug] [2026-05-09T21:44:28.308Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\
+[debug] [2026-05-09T21:44:28.308Z] [unzip] Entry: client/assets/index-BX-A56oj.js (compressed_size=582089 bytes, uncompressed_size=2092775 bytes)
+[debug] [2026-05-09T21:44:28.309Z] [unzip] Processing entry: client\assets\index-BX-A56oj.js
+[debug] [2026-05-09T21:44:28.309Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets
+[debug] [2026-05-09T21:44:28.309Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\index-BX-A56oj.js
+[debug] [2026-05-09T21:44:28.338Z] [unzip] Entry: client/assets/index-CjB9C900.css (compressed_size=35979 bytes, uncompressed_size=298654 bytes)
+[debug] [2026-05-09T21:44:28.339Z] [unzip] Processing entry: client\assets\index-CjB9C900.css
+[debug] [2026-05-09T21:44:28.340Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets
+[debug] [2026-05-09T21:44:28.340Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\index-CjB9C900.css
+[debug] [2026-05-09T21:44:28.344Z] [unzip] Entry: client/assets/index-BX-A56oj.js.map (compressed_size=2362482 bytes, uncompressed_size=10036679 bytes)
+[debug] [2026-05-09T21:44:28.344Z] [unzip] Processing entry: client\assets\index-BX-A56oj.js.map
+[debug] [2026-05-09T21:44:28.344Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets
+[debug] [2026-05-09T21:44:28.344Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\index-BX-A56oj.js.map
+[debug] [2026-05-09T21:44:28.403Z] [unzip] Entry: client/assets/extensions/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.403Z] [unzip] Processing entry: client\assets\extensions\
+[debug] [2026-05-09T21:44:28.403Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\extensions\
+[debug] [2026-05-09T21:44:28.404Z] [unzip] Entry: client/assets/extensions/default-extension.png (compressed_size=1646 bytes, uncompressed_size=1657 bytes)
+[debug] [2026-05-09T21:44:28.404Z] [unzip] Processing entry: client\assets\extensions\default-extension.png
+[debug] [2026-05-09T21:44:28.404Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\extensions
+[debug] [2026-05-09T21:44:28.404Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\extensions\default-extension.png
+[debug] [2026-05-09T21:44:28.406Z] [unzip] Entry: client/assets/img/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.406Z] [unzip] Processing entry: client\assets\img\
+[debug] [2026-05-09T21:44:28.406Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\img\
+[debug] [2026-05-09T21:44:28.407Z] [unzip] Entry: client/assets/img/database.png (compressed_size=29449 bytes, uncompressed_size=29988 bytes)
+[debug] [2026-05-09T21:44:28.407Z] [unzip] Processing entry: client\assets\img\database.png
+[debug] [2026-05-09T21:44:28.407Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\img
+[debug] [2026-05-09T21:44:28.407Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\img\database.png
+[debug] [2026-05-09T21:44:28.409Z] [unzip] Entry: client/assets/provider-icons/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.410Z] [unzip] Processing entry: client\assets\provider-icons\
+[debug] [2026-05-09T21:44:28.410Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\
+[debug] [2026-05-09T21:44:28.411Z] [unzip] Entry: client/assets/provider-icons/auth_service_saml.svg (compressed_size=575 bytes, uncompressed_size=1226 bytes)
+[debug] [2026-05-09T21:44:28.412Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_saml.svg
+[debug] [2026-05-09T21:44:28.412Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.413Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_saml.svg
+[debug] [2026-05-09T21:44:28.415Z] [unzip] Entry: client/assets/provider-icons/auth_service_phone.svg (compressed_size=261 bytes, uncompressed_size=414 bytes)
+[debug] [2026-05-09T21:44:28.415Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_phone.svg
+[debug] [2026-05-09T21:44:28.415Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.415Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_phone.svg
+[debug] [2026-05-09T21:44:28.417Z] [unzip] Entry: client/assets/provider-icons/auth_service_facebook.svg (compressed_size=289 bytes, uncompressed_size=457 bytes)
+[debug] [2026-05-09T21:44:28.417Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_facebook.svg
+[debug] [2026-05-09T21:44:28.417Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.417Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_facebook.svg
+[debug] [2026-05-09T21:44:28.419Z] [unzip] Entry: client/assets/provider-icons/auth_service_game_center.svg (compressed_size=991 bytes, uncompressed_size=3921 bytes)
+[debug] [2026-05-09T21:44:28.419Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_game_center.svg
+[debug] [2026-05-09T21:44:28.419Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.419Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_game_center.svg
+[debug] [2026-05-09T21:44:28.421Z] [unzip] Entry: client/assets/provider-icons/auth_service_apple.svg (compressed_size=230 bytes, uncompressed_size=334 bytes)
+[debug] [2026-05-09T21:44:28.421Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_apple.svg
+[debug] [2026-05-09T21:44:28.421Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.422Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_apple.svg
+[debug] [2026-05-09T21:44:28.423Z] [unzip] Entry: client/assets/provider-icons/auth_service_github.svg (compressed_size=466 bytes, uncompressed_size=838 bytes)
+[debug] [2026-05-09T21:44:28.423Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_github.svg
+[debug] [2026-05-09T21:44:28.423Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.423Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_github.svg
+[debug] [2026-05-09T21:44:28.425Z] [unzip] Entry: client/assets/provider-icons/auth_service_mslive.svg (compressed_size=203 bytes, uncompressed_size=378 bytes)
+[debug] [2026-05-09T21:44:28.425Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_mslive.svg
+[debug] [2026-05-09T21:44:28.425Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.425Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_mslive.svg
+[debug] [2026-05-09T21:44:28.426Z] [unzip] Entry: client/assets/provider-icons/auth_service_yahoo.svg (compressed_size=577 bytes, uncompressed_size=1182 bytes)
+[debug] [2026-05-09T21:44:28.427Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_yahoo.svg
+[debug] [2026-05-09T21:44:28.427Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.427Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_yahoo.svg
+[debug] [2026-05-09T21:44:28.428Z] [unzip] Entry: client/assets/provider-icons/auth_service_twitter.svg (compressed_size=444 bytes, uncompressed_size=751 bytes)
+[debug] [2026-05-09T21:44:28.428Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_twitter.svg
+[debug] [2026-05-09T21:44:28.428Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.428Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_twitter.svg
+[debug] [2026-05-09T21:44:28.430Z] [unzip] Entry: client/assets/provider-icons/auth_service_play_games.svg (compressed_size=565 bytes, uncompressed_size=1173 bytes)
+[debug] [2026-05-09T21:44:28.430Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_play_games.svg
+[debug] [2026-05-09T21:44:28.430Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.430Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_play_games.svg
+[debug] [2026-05-09T21:44:28.431Z] [unzip] Entry: client/assets/provider-icons/auth_service_email.svg (compressed_size=228 bytes, uncompressed_size=326 bytes)
+[debug] [2026-05-09T21:44:28.431Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_email.svg
+[debug] [2026-05-09T21:44:28.431Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.432Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_email.svg
+[debug] [2026-05-09T21:44:28.434Z] [unzip] Entry: client/assets/provider-icons/auth_service_google.svg (compressed_size=409 bytes, uncompressed_size=720 bytes)
+[debug] [2026-05-09T21:44:28.434Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_google.svg
+[debug] [2026-05-09T21:44:28.434Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.434Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_google.svg
+[debug] [2026-05-09T21:44:28.435Z] [unzip] Entry: client/assets/provider-icons/auth_service_oidc.svg (compressed_size=414 bytes, uncompressed_size=858 bytes)
+[debug] [2026-05-09T21:44:28.435Z] [unzip] Processing entry: client\assets\provider-icons\auth_service_oidc.svg
+[debug] [2026-05-09T21:44:28.435Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons
+[debug] [2026-05-09T21:44:28.436Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\assets\provider-icons\auth_service_oidc.svg
+[debug] [2026-05-09T21:44:28.437Z] [unzip] Entry: client/browserconfig.xml (compressed_size=491 bytes, uncompressed_size=822 bytes)
+[debug] [2026-05-09T21:44:28.437Z] [unzip] Processing entry: client\browserconfig.xml
+[debug] [2026-05-09T21:44:28.437Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.438Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\browserconfig.xml
+[debug] [2026-05-09T21:44:28.439Z] [unzip] Entry: client/favicon-32x32.png (compressed_size=475 bytes, uncompressed_size=475 bytes)
+[debug] [2026-05-09T21:44:28.439Z] [unzip] Processing entry: client\favicon-32x32.png
+[debug] [2026-05-09T21:44:28.439Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client
+[debug] [2026-05-09T21:44:28.439Z] [unzip] Writing file: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\client\favicon-32x32.png
+[debug] [2026-05-09T21:44:28.440Z] [unzip] Entry: server/ (compressed_size=0 bytes, uncompressed_size=0 bytes)
+[debug] [2026-05-09T21:44:28.440Z] [unzip] Processing entry: server\
+[debug] [2026-05-09T21:44:28.440Z] [unzip] mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\server\
+[debug] [2026-05-09T21:44:28.441Z] [unzip] Entry: server/server.mjs.map (compressed_size=217845 bytes, uncompressed_size=944978 bytes)
+[debug] [2026-05-09T21:44:28.441Z] [unzip] Processing entry: server\server.mjs.map
+[debug] [2026-05-09T21:44:28.442Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\server
+[debug] [2026-05-09T21:44:28.442Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\server\server.mjs.map
+[debug] [2026-05-09T21:44:28.448Z] [unzip] Entry: server/server.mjs (compressed_size=276407 bytes, uncompressed_size=933701 bytes)
+[debug] [2026-05-09T21:44:28.448Z] [unzip] Processing entry: server\server.mjs
+[debug] [2026-05-09T21:44:28.448Z] [unzip] else mkdir: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\server
+[debug] [2026-05-09T21:44:28.449Z] [unzip] deflating: C:\Users\janit\.cache\firebase\emulators\ui-v1.15.0\server\server.mjs
+[debug] [2026-05-09T21:44:28.456Z] [Extensions] Connecting Extensions emulator, this is a noop.
+[info] i  functions: Watching "F:\GitHub\Research\Coconut-Pathology-Detection-Service\functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"F:\\GitHub\\Research\\Coconut-Pathology-Detection-Service\\functions\" for Cloud Functions..."}}
+[debug] [2026-05-09T21:44:28.459Z] Customer code is not Node
+[debug] [2026-05-09T21:44:28.460Z] Validating python source
+[debug] [2026-05-09T21:44:28.460Z] Building python source
+[debug] [2026-05-09T21:44:28.462Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-05-09T21:44:28.471Z] Running command with virtualenv: command="F:\GitHub\Research\Coconut-Pathology-Detection-Service\functions\venv\Scripts\activate.bat", args=["","&&","python.exe","-c","\"import firebase_functions; import os; print(os.path.dirname(firebase_functions.__file__))\""]
+[debug] [2026-05-09T21:44:29.181Z] stdout: F:\GitHub\Research\Coconut-Pathology-Detection-Service\functions\venv\Lib\site-packages\firebase_functions
+
+[debug] [2026-05-09T21:44:29.192Z] Running admin server with args: ["python.exe","\"F:\\GitHub\\Research\\Coconut-Pathology-Detection-Service\\functions\\venv\\Lib\\site-packages\\firebase_functions\\private\\serving.py\""] and env: {"GCLOUD_PROJECT":"coconut-pathology-detection","K_REVISION":"1","PORT":"80","GOOGLE_CLOUD_QUOTA_PROJECT":"coconut-pathology-detection","FUNCTIONS_EMULATOR":"true","TZ":"UTC","FIREBASE_DEBUG_MODE":"true","FIREBASE_DEBUG_FEATURES":"{\"skipTokenVerification\":true,\"enableCors\":true}","FIREBASE_EMULATOR_HUB":"127.0.0.1:4400","FIRESTORE_EMULATOR_HOST":"127.0.0.1:8080","FIREBASE_FIRESTORE_EMULATOR_ADDRESS":"127.0.0.1:8080","FIREBASE_STORAGE_EMULATOR_HOST":"127.0.0.1:9199","STORAGE_EMULATOR_HOST":"http://127.0.0.1:9199","CLOUD_EVENTARC_EMULATOR_HOST":"http://127.0.0.1:9299","CLOUD_TASKS_EMULATOR_HOST":"127.0.0.1:9499","FIREBASE_CONFIG":"{\"storageBucket\":\"coconut-pathology-detection.firebasestorage.app\",\"projectId\":\"coconut-pathology-detection\"}","GOOGLE_APPLICATION_CREDENTIALS":"C:\\Users\\janit\\AppData\\Roaming\\firebase\\janithasuranjana2001_gmail_com_application_default_credentials.json","ADMIN_PORT":"8081"} in F:\GitHub\Research\Coconut-Pathology-Detection-Service\functions
+[debug] [2026-05-09T21:44:29.192Z] Running command with virtualenv: command="F:\GitHub\Research\Coconut-Pathology-Detection-Service\functions\venv\Scripts\activate.bat", args=["","&&","python.exe","\"F:\\GitHub\\Research\\Coconut-Pathology-Detection-Service\\functions\\venv\\Lib\\site-packages\\firebase_functions\\private\\serving.py\""]
+[info]  * Serving Flask app 'serving'
+ * Debug mode: off
+
+[error] WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:8081
+
+[error] Press CTRL+C to quit
+
+[error] 127.0.0.1 - - [09/May/2026 21:44:34] "GET /__/functions.yaml HTTP/1.1" 200 -
+
+[debug] [2026-05-09T21:44:34.109Z] Got response from /__/functions.yaml endpoints:
+  get_diagnostic_history:
+    availableMemoryMb: 256
+    concurrency: null
+    cpu: gcf_gen1
+    entryPoint: get_diagnostic_history
+    httpsTrigger: {}
+    ingressSettings: null
+    labels: {}
+    maxInstances: null
+    minInstances: null
+    platform: gcfv2
+    region:
+    - asia-south1
+    secretEnvironmentVariables: []
+    serviceAccountEmail: null
+    timeoutSeconds: 30
+  get_estate_heatmap:
+    availableMemoryMb: 256
+    concurrency: null
+    cpu: gcf_gen1
+    entryPoint: get_estate_heatmap
+    httpsTrigger: {}
+    ingressSettings: null
+    labels: {}
+    maxInstances: null
+    minInstances: null
+    platform: gcfv2
+    region:
+    - asia-south1
+    secretEnvironmentVariables: []
+    serviceAccountEmail: null
+    timeoutSeconds: 30
+  on_orthomosaic_uploaded:
+    availableMemoryMb: 4096
+    concurrency: null
+    cpu: 2
+    entryPoint: on_orthomosaic_uploaded
+    eventTrigger:
+      eventFilters:
+        bucket: coconut-pathology-detection.firebasestorage.app
+      eventType: google.cloud.storage.object.v1.finalized
+      retry: false
+    ingressSettings: null
+    labels: {}
+    maxInstances: null
+    minInstances: null
+    platform: gcfv2
+    region:
+    - asia-south1
+    secretEnvironmentVariables: []
+    serviceAccountEmail: null
+    timeoutSeconds: 540
+  sync_mobile_diagnostics:
+    availableMemoryMb: 512
+    concurrency: null
+    cpu: gcf_gen1
+    entryPoint: sync_mobile_diagnostics
+    httpsTrigger: {}
+    ingressSettings: null
+    labels: {}
+    maxInstances: null
+    minInstances: null
+    platform: gcfv2
+    region:
+    - asia-south1
+    secretEnvironmentVariables: []
+    serviceAccountEmail: null
+    timeoutSeconds: 120
+params: []
+requiredAPIs: []
+specVersion: v1alpha1
+
+[error] 127.0.0.1 - - [09/May/2026 21:44:34] "GET /__/quitquitquit HTTP/1.1" 200 -
+
+[info] +  functions: Loaded functions definitions from source: get_diagnostic_history, get_estate_heatmap, on_orthomosaic_uploaded, sync_mobile_diagnostics. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: get_diagnostic_history, get_estate_heatmap, on_orthomosaic_uploaded, sync_mobile_diagnostics."}}
+[info] +  functions[asia-south1-get_diagnostic_history]: http function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/get_diagnostic_history). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/get_diagnostic_history)."}}
+[info] +  functions[asia-south1-get_estate_heatmap]: http function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/get_estate_heatmap). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/get_estate_heatmap)."}}
+[debug] [2026-05-09T21:44:34.150Z] addStorageTrigger {"eventTrigger":{"eventType":"google.cloud.storage.object.v1.finalized","resource":"coconut-pathology-detection.firebasestorage.app","eventFilters":{"bucket":"coconut-pathology-detection.firebasestorage.app"}}}
+[info] +  functions[asia-south1-on_orthomosaic_uploaded]: storage function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mstorage\u001b[22m function initialized."}}
+[info] +  functions[asia-south1-sync_mobile_diagnostics]: http function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/sync_mobile_diagnostics). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/sync_mobile_diagnostics)."}}
+[debug] [2026-05-09T21:44:34.164Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────┬────────────────┬──────────────────────────────────┐
+│ Emulator   │ Host:Port      │ View in Emulator UI              │
+├────────────┼────────────────┼──────────────────────────────────┤
+│ Functions  │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions  │
+├────────────┼────────────────┼──────────────────────────────────┤
+│ Firestore  │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore  │
+├────────────┼────────────────┼──────────────────────────────────┤
+│ Storage    │ 127.0.0.1:9199 │ http://127.0.0.1:4000/storage    │
+├────────────┼────────────────┼──────────────────────────────────┤
+│ Extensions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/extensions │
+└────────────┴────────────────┴──────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+┌─────────────────────────┬───────────────┬─────────────────────┐
+│ Extension Instance Name │ Extension Ref │ View in Emulator UI │
+└─────────────────────────┴───────────────┴─────────────────────┘
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2026-05-09T21:57:54.988Z] Functions emulator received unknown request at path /asia-south1/sync_mobile_diagnostics
