@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from firebase_admin import firestore as admin_firestore
 from firebase_functions import logger
 from google.cloud.firestore import Client as FirestoreClient
-from google.cloud.firestore_v1.base_document import DocumentReference
+from google.cloud.firestore import DocumentReference
 
 
 # ── Constants ────────────────────────────────────────────────────────
@@ -174,7 +174,7 @@ class MobileSyncService:
                     "estate_id": request.estate_id,
                     "disease_class": item.disease_class,
                     "confidence": item.confidence,
-                    "location": admin_firestore.firestore.GeoPoint(
+                    "location": admin_firestore.GeoPoint(
                         item.latitude, item.longitude
                     ),
                     "source": "mobile_v2",
