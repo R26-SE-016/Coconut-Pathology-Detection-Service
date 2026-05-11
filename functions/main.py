@@ -28,6 +28,7 @@ from firebase_admin import firestore as admin_firestore
 from firebase_admin import storage as admin_storage
 from firebase_functions import https_fn, logger, options, storage_fn
 from google.cloud.firestore import Client as FirestoreClient
+from google.cloud.firestore import DocumentReference
 
 # ── Firebase Initialisation ──────────────────────────────────────────
 # Initialise once per cold start; reused across all function invocations.
@@ -51,6 +52,7 @@ options.set_global_options(region="asia-south1")
 
 
 @storage_fn.on_object_finalized(
+    bucket="coconut-pathology-detection.appspot.com",
     memory=options.MemoryOption.GB_4,
     timeout_sec=540,
     cpu=2,
@@ -185,7 +187,7 @@ def on_orthomosaic_uploaded(
 # ── System A: HTTP endpoint to retrieve heatmap data ─────────────────
 
 @https_fn.on_request(
-    cors=options.CorsOptions(cors_origins="*", cors_methods=["GET"]),
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["GET", "OPTIONS"]),
     memory=options.MemoryOption.MB_256,
     timeout_sec=30,
 )
@@ -258,7 +260,7 @@ def get_estate_heatmap(req: https_fn.Request) -> https_fn.Response:
 
 
 @https_fn.on_request(
-    cors=options.CorsOptions(cors_origins="*", cors_methods=["POST"]),
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["POST", "OPTIONS"]),
     memory=options.MemoryOption.MB_512,
     timeout_sec=120,
 )
@@ -359,7 +361,7 @@ def sync_mobile_diagnostics(req: https_fn.Request) -> https_fn.Response:
 # ── System B: HTTP endpoint to retrieve user diagnostic history ──────
 
 @https_fn.on_request(
-    cors=options.CorsOptions(cors_origins="*", cors_methods=["GET"]),
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["GET", "OPTIONS"]),
     memory=options.MemoryOption.MB_256,
     timeout_sec=30,
 )
@@ -433,6 +435,113 @@ def get_diagnostic_history(req: https_fn.Request) -> https_fn.Response:
         logger.error(f"Failed to fetch diagnostics: {exc}")
         return https_fn.Response(
             json.dumps({"error": "Internal server error"}),
+            status=500,
+            content_type="application/json",
+        )
+
+# ── System B: HTTP endpoint to run real-time inference on the backend ─────────
+
+@https_fn.on_request(
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["POST", "OPTIONS"]),
+    memory=options.MemoryOption.MB_512,
+    timeout_sec=30,
+)
+def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
+    """
+    Run TFLite MobileNetV2 inference on the backend.
+    Accepts multipart/form-data with an 'image' file.
+    """
+    if req.method != "POST":
+        return https_fn.Response(
+            json.dumps({"error": "Method not allowed. Use POST."}),
+            status=405,
+            content_type="application/json",
+        )
+
+    image_file = req.files.get("image")
+    if not image_file:
+        return https_fn.Response(
+            json.dumps({"error": "Missing 'image' in multipart/form-data"}),
+            status=400,
+            content_type="application/json",
+        )
+
+    try:
+        import time
+        import numpy as np
+        from PIL import Image
+        import io
+        import tensorflow as tf
+
+        start_time = time.time()
+
+        # Load and preprocess image
+        img_bytes = image_file.read()
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        img = img.resize((224, 224), Image.Resampling.NEAREST)
+        
+        # Convert to numpy and match the TFLite model's expected UINT8 input
+        input_data = np.expand_dims(np.array(img, dtype=np.uint8), axis=0)
+
+        # Load TFLite model
+        model_path = os.path.join(os.path.dirname(__file__), "models", "system_b", "system_b_baseline_int8.tflite")
+        interpreter = tf.lite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        
+        # Run inference
+        interpreter.set_tensor(input_details[0]['index'], input_data)
+        interpreter.invoke()
+        probs = interpreter.get_tensor(output_details[0]['index'])[0]
+        
+        inference_time_ms = int((time.time() - start_time) * 1000)
+
+        # Post-process
+        CLASS_NAMES = [
+            'bud root dropping',
+            'bud rot',
+            'gray leaf spot',
+            'healthy leaves',
+            'leaf rot',
+            'stembleeding',
+        ]
+        
+        # INT8 outputs are usually UINT8 (0-255). Convert to 0-1 probability.
+        # We check the dtype of the output tensor to decide how to process.
+        output_dtype = output_details[0]['dtype']
+        
+        def to_prob(v):
+            if output_dtype == np.uint8 or output_dtype == np.int8:
+                # Quantized: map 0-255 to 0-1 (simple approximation for Softmax)
+                return float(v) / 255.0
+            return float(v)
+
+        max_idx = int(np.argmax(probs))
+        top_confidence = to_prob(probs[max_idx])
+        
+        all_predictions = [
+            {"class": cls_name, "confidence": to_prob(prob)}
+            for cls_name, prob in zip(CLASS_NAMES, probs)
+        ]
+        all_predictions.sort(key=lambda x: x["confidence"], reverse=True)
+
+        return https_fn.Response(
+            json.dumps({
+                "disease_class": CLASS_NAMES[max_idx],
+                "confidence": top_confidence,
+                "all_predictions": all_predictions,
+                "inference_time_ms": inference_time_ms
+            }),
+            status=200,
+            content_type="application/json",
+        )
+
+    except Exception as exc:
+        logger.error(f"Inference failed: {exc}")
+        return https_fn.Response(
+            json.dumps({"error": str(exc)}),
             status=500,
             content_type="application/json",
         )
