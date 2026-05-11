@@ -204,5 +204,4 @@ Three-tier role-based access:
 
 | Member | Component |
 |---|---|
-| Lakshan H.G.J.S. | Detection Pipelines & Backend (this repository) |
-| [Teammate] | Advisory System & Knowledge Base |
+| Lakshan H.G.J.S. | Detection Pipelines & Backend |
