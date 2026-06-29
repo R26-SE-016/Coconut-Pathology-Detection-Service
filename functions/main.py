@@ -444,7 +444,7 @@ def get_diagnostic_history(req: https_fn.Request) -> https_fn.Response:
 @https_fn.on_request(
     cors=options.CorsOptions(cors_origins="*", cors_methods=["POST", "OPTIONS"]),
     memory=options.MemoryOption.MB_512,
-    timeout_sec=30,
+    timeout_sec=120,
 )
 def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
     """
