@@ -1,9 +1,18 @@
 # ──────────────────────────────────────────────────────────────────────
 # Coconut Pathology Detection Service — Inference Package
-# System A: Macroscopic UAV Pipeline (SAHI + YOLOv11)
+# System A: Macroscopic UAV & Spectral-Morphological Pipeline
 # ──────────────────────────────────────────────────────────────────────
 
-from inference.sahi_pipeline import SahiInferencePipeline
-from inference.nms import CrossTileNMS
+from inference.spectral_pipeline import (
+    SpectralInferencePipeline,
+    AerialSpectralPipeline,
+    CanopyHotspot,
+    SpectralPipelineResult,
+)
 
-__all__ = ["SahiInferencePipeline", "CrossTileNMS"]
+__all__ = [
+    "SpectralInferencePipeline",
+    "AerialSpectralPipeline",
+    "CanopyHotspot",
+    "SpectralPipelineResult",
+]
