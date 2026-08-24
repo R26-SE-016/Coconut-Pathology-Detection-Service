@@ -112,57 +112,36 @@ def on_orthomosaic_uploaded(
         return
 
     try:
-        # ── Step 2 & 3: SAHI + YOLOv11 inference ────────────────
-        from inference.sahi_pipeline import SahiInferencePipeline
+        # ── Step 2: Spectral & Morphological Inference ───────────
+        from inference.spectral_pipeline import SpectralInferencePipeline
 
-        pipeline = SahiInferencePipeline()
-        pipeline_output = pipeline.run(local_path)
+        with open(local_path, "rb") as f:
+            img_bytes = f.read()
+
+        pipeline = SpectralInferencePipeline()
+        result = pipeline.process(image_bytes=img_bytes, index_type="VARI")
+        res_dict = result.to_dict()
 
         logger.info(
-            f"Inference complete — {len(pipeline_output.detections)} "
-            f"raw detections from {pipeline_output.num_slices} tiles"
+            f"[System A] Orthomosaic analyzed — "
+            f"{result.estimated_palms_count} palms detected, "
+            f"{len(result.hotspots)} hotspots flagged"
         )
 
-        # ── Step 4: Cross-tile NMS ───────────────────────────────
-        from inference.nms import CrossTileNMS
-
-        nms = CrossTileNMS()
-        heatmap = nms.merge(pipeline_output.detections)
-
-        # ── Step 5: Write to Firestore ───────────────────────────
+        # ── Step 3: Write to Firestore ───────────────────────────
         db = _get_db()
         now = datetime.now(timezone.utc)
 
         heatmap_doc = {
             "estate_id": estate_id,
             "image_ref": f"gs://{bucket_name}/{file_path}",
-            "image_dimensions": {
-                "width": pipeline_output.image_width,
-                "height": pipeline_output.image_height,
-            },
-            "detections": [
-                {
-                    "bbox": det.bbox,
-                    "class": det.category_name,
-                    "confidence": det.confidence,
-                    "category_id": det.category_id,
-                }
-                for det in heatmap.detections
-            ],
-            "summary": {
-                "total": heatmap.total_detections,
-                "by_class": {
-                    cls_name: {
-                        "count": stats.count,
-                        "mean_confidence": stats.mean_confidence,
-                        "max_confidence": stats.max_confidence,
-                    }
-                    for cls_name, stats in heatmap.summary.items()
-                },
-            },
+            "image_dimensions": res_dict["image_dimensions"],
+            "statistics": res_dict["statistics"],
+            "hotspots": [h.to_dict() for h in result.hotspots],
             "created_at": now.isoformat(),
             "processed_at": admin_firestore.SERVER_TIMESTAMP,
             "processed_by": "on_orthomosaic_uploaded/v1",
+            "source": "storage_orthomosaic_trigger",
         }
 
         doc_ref = db.collection("heatmaps").document()
@@ -545,3 +524,269 @@ def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
             status=500,
             content_type="application/json",
         )
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  SYSTEM A — DUAL-INDEX SPECTRAL ANALYSIS (NDVI & VARI + HOTSPOTS)
+# ══════════════════════════════════════════════════════════════════════
+
+
+@https_fn.on_request(
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["POST", "OPTIONS"]),
+    memory=options.MemoryOption.GB_1,
+    timeout_sec=180,
+)
+def process_aerial_spectral(req: https_fn.Request) -> https_fn.Response:
+    """
+    Process aerial drone imagery to calculate NDVI or VARI spectral indices,
+    segment canopy health distributions, and detect stressed hotspots.
+
+    Accepts multipart/form-data or JSON with base64 image:
+        - image (file or base64 string): Primary aerial image
+        - nir_image (optional file/base64): Companion NIR image for NDVI
+        - index_type (str): 'NDVI' or 'VARI' (default: 'VARI')
+        - estate_id (str): Associated estate identifier
+        - gps_bounds (optional JSON string/dict): { lat, lng, span_lat, span_lng }
+    """
+    if req.method != "POST":
+        return https_fn.Response(
+            json.dumps({"error": "Method not allowed. Use POST."}),
+            status=405,
+            content_type="application/json",
+        )
+
+    try:
+        import base64
+        from inference.spectral_pipeline import SpectralInferencePipeline
+
+        image_bytes: Optional[bytes] = None
+        nir_bytes: Optional[bytes] = None
+        index_type = "VARI"
+        estate_id = "default_estate"
+        gps_bounds = None
+
+        # Check content type: multipart vs json
+        if req.content_type and "multipart/form-data" in req.content_type:
+            image_file = req.files.get("image")
+            if image_file:
+                image_bytes = image_file.read()
+
+            nir_file = req.files.get("nir_image")
+            if nir_file:
+                nir_bytes = nir_file.read()
+
+            index_type = req.form.get("index_type", "VARI")
+            estate_id = req.form.get("estate_id", "estate_001")
+            bounds_raw = req.form.get("gps_bounds")
+            if bounds_raw:
+                try:
+                    gps_bounds = json.loads(bounds_raw)
+                except Exception:
+                    pass
+        else:
+            body = req.get_json(silent=True) or {}
+            img_b64 = body.get("image") or body.get("imageBase64")
+            if img_b64:
+                if "," in img_b64:
+                    img_b64 = img_b64.split(",", 1)[1]
+                image_bytes = base64.b64decode(img_b64)
+
+            nir_b64 = body.get("nir_image") or body.get("nirBase64")
+            if nir_b64:
+                if "," in nir_b64:
+                    nir_b64 = nir_b64.split(",", 1)[1]
+                nir_bytes = base64.b64decode(nir_b64)
+
+            index_type = body.get("index_type", "VARI")
+            estate_id = body.get("estate_id", "estate_001")
+            gps_bounds = body.get("gps_bounds")
+
+        if not image_bytes:
+            return https_fn.Response(
+                json.dumps({"error": "Missing required image file/payload."}),
+                status=400,
+                content_type="application/json",
+            )
+
+        # Run pipeline
+        pipeline = SpectralInferencePipeline()
+        result = pipeline.process(
+            image_bytes=image_bytes,
+            index_type=index_type,
+            nir_bytes=nir_bytes,
+            gps_bounds=gps_bounds,
+        )
+
+        res_dict = result.to_dict()
+        res_dict["estate_id"] = estate_id
+        res_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Save record to Firestore
+        try:
+            db = _get_db()
+            batch = db.batch()
+
+            # Save heatmap record
+            heatmap_ref = db.collection("heatmaps").document()
+            heatmap_data = {
+                "estate_id": estate_id,
+                "index_type": result.index_type,
+                "image_dimensions": res_dict["image_dimensions"],
+                "statistics": res_dict["statistics"],
+                "created_at": res_dict["created_at"],
+                "source": "aerial_spectral",
+            }
+            batch.set(heatmap_ref, heatmap_data)
+
+            # Save each individual hotspot for field mobile inspection
+            for hs in result.hotspots:
+                hs_ref = db.collection("canopy_hotspots").document(hs.id)
+                hs_data = hs.to_dict()
+                hs_data["estate_id"] = estate_id
+                hs_data["heatmap_id"] = heatmap_ref.id
+                hs_data["index_type"] = result.index_type
+                hs_data["created_at"] = res_dict["created_at"]
+                batch.set(hs_ref, hs_data)
+
+            batch.commit()
+            res_dict["heatmap_id"] = heatmap_ref.id
+            logger.info(
+                f"[System A] Spectral analysis saved: heatmap={heatmap_ref.id}, "
+                f"hotspots={len(result.hotspots)} for estate={estate_id}"
+            )
+        except Exception as db_exc:
+            logger.warn(f"[System A] Firestore write skipped/failed: {db_exc}")
+
+        def _numpy_safe(obj):
+            if hasattr(obj, "item"):
+                return obj.item()
+            return str(obj)
+
+        return https_fn.Response(
+            json.dumps(res_dict, default=_numpy_safe),
+            status=200,
+            content_type="application/json",
+        )
+
+    except Exception as exc:
+        logger.error(f"[System A] Spectral processing failed: {exc}")
+        return https_fn.Response(
+            json.dumps({"error": str(exc)}),
+            status=500,
+            content_type="application/json",
+        )
+
+
+@https_fn.on_request(
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["GET", "OPTIONS"]),
+    memory=options.MemoryOption.MB_256,
+    timeout_sec=30,
+)
+def get_canopy_hotspots(req: https_fn.Request) -> https_fn.Response:
+    """
+    Fetch active canopy stress hotspots for an estate so mobile field officers
+    can perform targeted on-ground leaf inspection.
+
+    Query params:
+        - estate_id (required): The estate identifier
+        - status (optional): Filter by 'pending', 'inspected', 'resolved' (default: all)
+        - limit (optional): Max hotspots (default: 50)
+    """
+    if req.method != "GET":
+        return https_fn.Response(
+            json.dumps({"error": "Method not allowed. Use GET."}),
+            status=405,
+            content_type="application/json",
+        )
+
+    estate_id = req.args.get("estate_id")
+    if not estate_id:
+        return https_fn.Response(
+            json.dumps({"error": "Missing required query param: 'estate_id'"}),
+            status=400,
+            content_type="application/json",
+        )
+
+    status_filter = req.args.get("status")
+    limit = min(int(req.args.get("limit", 50)), 100)
+
+    try:
+        db = _get_db()
+        query = db.collection("canopy_hotspots").where("estate_id", "==", estate_id)
+
+        if status_filter:
+            query = query.where("status", "==", status_filter)
+
+        docs = query.order_by("created_at", direction="DESCENDING").limit(limit).stream()
+        results = []
+        for doc in docs:
+            d = doc.to_dict()
+            d["id"] = doc.id
+            results.append(d)
+
+        return https_fn.Response(
+            json.dumps({"estate_id": estate_id, "count": len(results), "hotspots": results}),
+            status=200,
+            content_type="application/json",
+        )
+    except Exception as exc:
+        logger.error(f"Failed to fetch canopy hotspots: {exc}")
+        return https_fn.Response(
+            json.dumps({"error": "Internal server error"}),
+            status=500,
+            content_type="application/json",
+        )
+
+
+@https_fn.on_request(
+    cors=options.CorsOptions(cors_origins="*", cors_methods=["PATCH", "POST", "OPTIONS"]),
+    memory=options.MemoryOption.MB_256,
+    timeout_sec=30,
+)
+def update_hotspot_status(req: https_fn.Request) -> https_fn.Response:
+    """
+    Update inspection status of a canopy hotspot once a field officer diagnoses it.
+    """
+    if req.method not in ["PATCH", "POST"]:
+        return https_fn.Response(
+            json.dumps({"error": "Method not allowed. Use PATCH or POST."}),
+            status=405,
+            content_type="application/json",
+        )
+
+    body = req.get_json(silent=True) or {}
+    hotspot_id = body.get("hotspot_id") or req.args.get("hotspot_id")
+    status_val = body.get("status", "inspected")
+    leaf_diag_id = body.get("leaf_diagnostic_id")
+
+    if not hotspot_id:
+        return https_fn.Response(
+            json.dumps({"error": "Missing 'hotspot_id'"}),
+            status=400,
+            content_type="application/json",
+        )
+
+    try:
+        db = _get_db()
+        doc_ref = db.collection("canopy_hotspots").document(hotspot_id)
+        update_data = {
+            "status": status_val,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if leaf_diag_id:
+            update_data["leaf_diagnostic_id"] = leaf_diag_id
+
+        doc_ref.update(update_data)
+        return https_fn.Response(
+            json.dumps({"success": True, "hotspot_id": hotspot_id, "status": status_val}),
+            status=200,
+            content_type="application/json",
+        )
+    except Exception as exc:
+        logger.error(f"Failed to update hotspot: {exc}")
+        return https_fn.Response(
+            json.dumps({"error": str(exc)}),
+            status=500,
+            content_type="application/json",
+        )
+
