@@ -86,3 +86,4 @@ ehthumbs.db
 *.pth
 *.pt
 !models/system_b/system_b_baseline_int8.tflite
+*.log
