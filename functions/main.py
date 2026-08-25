@@ -30,14 +30,15 @@ from firebase_functions import https_fn, logger, options, storage_fn
 from google.cloud.firestore import Client as FirestoreClient
 from google.cloud.firestore import DocumentReference
 
-# ── Firebase Initialisation ──────────────────────────────────────────
-# Initialise once per cold start; reused across all function invocations.
-
-firebase_admin.initialize_app()
+def _init_firebase():
+    """Initialise once per cold start."""
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app()
 
 
 def _get_db() -> FirestoreClient:
     """Return the Firestore client (lazy, cached by the Admin SDK)."""
+    _init_firebase()
     return admin_firestore.client()
 
 
