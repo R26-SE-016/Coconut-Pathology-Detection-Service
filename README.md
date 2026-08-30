@@ -1,7 +1,10 @@
 <div align="center">
 
-# 🥥 SaruPol — Coconut Pathology Detection Service
+<img src="./docs/brand/logo-text.png" alt="සරුපොල් (SaruPol)" width="380" />
+<br/>
+<img src="./docs/brand/logo-icon.png" alt="SaruPol Icon" width="80" />
 
+### 🥥 සරුපොල් (SaruPol) — Coconut Pathology Detection Service
 **Serverless Python Multiscale Computer Vision Backend for Aerial Spectral Surveillance & Edge AI Pathology**
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -9,7 +12,7 @@
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-asia--south1-4285F4.svg?logo=google-cloud&logoColor=white)](https://cloud.google.com/)
 [![Firestore](https://img.shields.io/badge/Firestore-Native%20Mode-FFCA28.svg?logo=firebase&logoColor=black)](https://firebase.google.com/docs/firestore)
 [![TensorFlow Lite](https://img.shields.io/badge/Model-MobileNetV2--INT8-FF6F00.svg?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/lite)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
+[![Status](https://img.shields.io/badge/Status-Production%20Live-brightgreen.svg)]()
 
 </div>
 
