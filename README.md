@@ -1,207 +1,224 @@
-# 🥥 Coconut Pathology Detection Service
+<div align="center">
 
-**Project R26-SE-016** — Multiscale Computer Vision Ecosystem for Coconut Pathology
+# 🥥 SaruPol — Coconut Pathology Detection Service
 
-A serverless Python backend built on **Firebase Cloud Functions (Gen 2)** and **Firestore** that operationalizes two independent deep-learning detection systems for coconut palm diseases.
+**Serverless Python Multiscale Computer Vision Backend for Aerial Spectral Surveillance & Edge AI Pathology**
 
----
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Firebase](https://img.shields.io/badge/Firebase%20Functions-Gen%202-FFCA28.svg?logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-asia--south1-4285F4.svg?logo=google-cloud&logoColor=white)](https://cloud.google.com/)
+[![Firestore](https://img.shields.io/badge/Firestore-Native%20Mode-FFCA28.svg?logo=firebase&logoColor=black)](https://firebase.google.com/docs/firestore)
+[![TensorFlow Lite](https://img.shields.io/badge/Model-MobileNetV2--INT8-FF6F00.svg?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/lite)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
 
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    CLOUD INFRASTRUCTURE                     │
-│                                                             │
-│  ┌──────────────────────┐    ┌──────────────────────────┐   │
-│  │     SYSTEM A (UAV)   │    │   SYSTEM B (Mobile)      │   │
-│  │                      │    │                          │   │
-│  │  Cloud Storage       │    │  React Native App        │   │
-│  │       │              │    │       │                  │   │
-│  │       ▼              │    │       ▼                  │   │
-│  │  on_orthomosaic_     │    │  sync_mobile_            │   │
-│  │  uploaded()          │    │  diagnostics()           │   │
-│  │       │              │    │       │                  │   │
-│  │  SAHI Slicing        │    │  BulkWriter              │   │
-│  │  1024×1024 tiles     │    │  Batch Writes            │   │
-│  │       │              │    │       │                  │   │
-│  │  YOLOv11 Inference   │    │       │                  │   │
-│  │       │              │    │       │                  │   │
-│  │  Cross-Tile NMS      │    │       │                  │   │
-│  │       │              │    │       │                  │   │
-│  │       ▼              │    │       ▼                  │   │
-│  │  Firestore           │    │  Firestore               │   │
-│  │  (heatmaps/)         │    │  (diagnostics/)          │   │
-│  └──────────────────────┘    └──────────────────────────┘   │
-│                                                             │
-│           Systems A & B are FULLY INDEPENDENT               │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### System A — Macroscopic Detection (UAV)
-> **For**: Plantation owners with drone capability
-
-- **Input**: 4K UAV orthomosaics uploaded to Cloud Storage
-- **Model**: YOLOv11 (server-side, bundled weights)
-- **Pipeline**: SAHI slicing → 1024×1024 tiles (20% overlap) → YOLOv11 → Cross-tile NMS
-- **Output**: Pathological heatmaps in `heatmaps/` collection
-- **Detects**: V-cuts, scorching, wilting
-
-### System B — Microscopic Detection (Mobile)
-> **For**: Small coconut farmers using mobile devices
-
-- **Input**: On-device MobileNetV2-INT8 classification results
-- **Pipeline**: React Native app → HTTP POST → BulkWriter → Firestore
-- **Output**: Georeferenced diagnostics in `diagnostics/` collection
-- **Syncs**: Disease class, confidence, GPS coordinates
+</div>
 
 ---
 
-## Cloud Functions
+## 📖 Overview
 
-| Function | Trigger | System | Purpose |
-|---|---|---|---|
-| `on_orthomosaic_uploaded` | Storage event | A | Process UAV orthomosaic → heatmap |
-| `get_estate_heatmap` | HTTP GET | A | Fetch heatmaps for an estate |
-| `sync_mobile_diagnostics` | HTTP POST | B | Batch-write mobile diagnostic results |
-| `get_diagnostic_history` | HTTP GET | B | Fetch user's diagnostic history |
+**Coconut-Pathology-Detection-Service** (Project **R26-SE-016**) is the serverless AI/ML computation engine of the **SaruPol Smart Coconut Plantation Ecosystem**. 
+
+Built on **Google Cloud Functions (Gen 2)**, **Google Cloud Firestore**, and **Google Cloud Storage** in the `asia-south1` (Mumbai) region, this service operationalizes two independent, complementary computer vision pipelines:
+
+1. **System A — Macroscopic UAV Aerial Surveillance Engine**:
+   - **Excess Green (ExG) Canopy Segmentation**: Isolates living palm crowns from inter-row soil and ground noise.
+   - **Dual-Index Spectral Analysis**: Computes **VARI** (Visible Atmospherically Resistant Index) for standard RGB drone flights and **NDVI** (Normalized Difference Vegetation Index) for 4-band / NIR multispectral surveys.
+   - **Euclidean Distance Transform (EDT) Local Maxima**: Deterministically extracts individual physical palm crowns and spatial geometries.
+   - **Discrete Moving-Window Z-Score Outlier Engine**: Identifies biologically stressed hotspot trees ($Z \le -2.0\sigma$) and generates field dispatch tickets.
+
+2. **System B — Microscopic On-Device Diagnostic & Sync Engine**:
+   - High-throughput asynchronous **BulkWriter Firestore batch ingestion** for edge field scans.
+   - User diagnostic history tracking, feedback logging, and Sri Lanka Coconut Research Institute (CRI) clinical metadata enrichment.
 
 ---
 
-## Project Structure
+## 🏛️ System Architecture
 
 ```
+                                  ┌─────────────────────────────────────────────────────────┐
+                                  │      SaruPol API Gateway / Mobile App / Web UI          │
+                                  └────────────────────────────┬────────────────────────────┘
+                                                               │
+                                ┌──────────────────────────────┴──────────────────────────────┐
+                                │                                                             │
+                                ▼ (Port 5001 / Cloud Functions)                               ▼ (Port 5001 / Cloud Functions)
+┌─────────────────────────────────────────────────────────────┐ ┌─────────────────────────────────────────────────────────────┐
+│                 System A (UAV Surveillance)                 │ │                 System B (Mobile Diagnostics)               │
+│                                                             │ │                                                             │
+│  ┌────────────────────────┐   ┌──────────────────────────┐  │ │  ┌────────────────────────┐   ┌──────────────────────────┐  │
+│  │ process_aerial_        │   │ on_orthomosaic_          │  │ │  │ predict_mobile_disease │   │ sync_mobile_diagnostics  │  │
+│  │ spectral (HTTP POST)   │   │ uploaded (Storage Event) │  │ │  │ (TFLite Fallback API)  │   │ (BulkWriter Firestore)   │  │
+│  └───────────┬────────────┘   └─────────────┬────────────┘  │ │  └───────────┬────────────┘   └─────────────┬────────────┘  │
+│              │                              │               │ │              │                              │               │
+│              ▼                              ▼               │ │              ▼                              ▼               │
+│  ┌────────────────────────┐   ┌──────────────────────────┐  │ │  ┌────────────────────────┐   ┌──────────────────────────┐  │
+│  │ ExG + EDT + Z-Score    │   │ SAHI Slicing (1024x1024) │  │ │  │ MobileNetV2-INT8       │   │ Firestore batch writes   │  │
+│  │ Spectral Pipeline      │   │ + YOLOv11 + Tile NMS     │  │ │  │ + Softmax Probabilities│   │ (diagnostics/ collection)│  │
+│  └───────────┬────────────┘   └─────────────┬────────────┘  │ │  └───────────┬────────────┘   └─────────────┬────────────┘  │
+└──────────────┼──────────────────────────────┼───────────────┘ └──────────────┼──────────────────────────────┼───────────────┘
+               │                              │                                │                              │
+               ▼                              ▼                                ▼                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           Google Cloud Firestore & Storage Layer                                            │
+│                                                                                                                             │
+│       • `diagnostics/`       — Georeferenced field scans with pathogen severity & confidence metadata                       │
+│       • `canopy_hotspots/`   — Discrete physiological stress outlier tickets dispatched for field inspection                │
+│       • `heatmaps/`          — Colormapped vegetation index rasters and NMS bounding box metadata                           │
+│       • `estates/`           — Estate boundary polygons and historical flight telemetry                                     │
+│       • `users/`             — Role-based access control (Field Officers, Estate Managers, Agronomists)                     │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🧩 Cloud Functions Endpoint Reference
+
+| Function Name | Trigger | Method | Purpose |
+| :--- | :--- | :--- | :--- |
+| `process_aerial_spectral` | HTTPS | `POST` | Processes raw drone orthomosaics, generates VARI/NDVI rasters, extracts palm crowns, and flags Z-score outliers |
+| `get_canopy_hotspots` | HTTPS | `GET` | Retrieves flagged physiological stress hotspots for an estate |
+| `update_hotspot_status` | HTTPS | `PATCH` | Updates hotspot status (`pending` $\rightarrow$ `inspected` $\rightarrow$ `resolved`) with leaf diagnostic ID |
+| `sync_mobile_diagnostics` | HTTPS | `POST` | High-throughput batch synchronization of mobile leaf diagnostic records |
+| `get_diagnostic_history` | HTTPS | `GET` | Fetches historical diagnostic records filtered by user or estate |
+| `on_orthomosaic_uploaded` | Cloud Storage | `Event` | Automatically triggered on 4K orthomosaic `.tif` uploads $\rightarrow$ SAHI + YOLOv11 inference |
+| `get_estate_heatmap` | HTTPS | `GET` | Fetches raster heatmaps and aggregated health scores for an estate |
+
+---
+
+## 📂 Project Structure
+
+```
+Coconut-Pathology-Detection-Service/
 ├── functions/
-│   ├── main.py                   # Cloud Functions entry points
-│   ├── requirements.txt          # Python dependencies
 │   ├── inference/
-│   │   ├── sahi_pipeline.py      # SAHI + YOLOv11 inference
-│   │   └── nms.py                # Cross-tile NMS merging
+│   │   ├── __init__.py
+│   │   └── spectral_pipeline.py          # Unified ExG, VARI/NDVI, EDT, & Z-Score anomaly engine
+│   ├── models/
+│   │   └── system_b/
+│   │       └── system_b_baseline_int8.tflite # Quantized MobileNetV2-INT8 model weights
 │   ├── sync/
-│   │   └── mobile_sync.py        # Mobile batch sync service
-│   └── models/
-│       └── coconut_yolov11.pt    # Bundled model weights (gitignored)
+│   │   └── mobile_sync.py                # BulkWriter batch ingestion service
+│   ├── main.py                           # Cloud Functions Gen 2 entrypoints
+│   └── requirements.txt                  # Python dependencies (NumPy, SciPy, Pillow, Firebase Admin)
 ├── firestore/
-│   ├── schema.json               # Firestore data schema
-│   └── firestore.rules           # Multi-tenant security rules
+│   ├── firestore.rules                   # Multi-tenant security rules
+│   └── firestore.indexes.json            # Composite index definitions
+├── storage.rules                         # Cloud Storage security rules
+├── firebase.json                         # Firebase configuration & emulator definitions
+├── .firebaserc                           # Project alias configuration (`coconut-pathology-detection`)
 └── README.md
 ```
 
 ---
 
-## Firestore Collections
-
-| Collection | System | Description |
-|---|---|---|
-| `users/` | Shared | User profiles with roles & estate assignments |
-| `estates/` | Shared | Estate metadata with geographic bounds |
-| `diagnostics/` | A & B | Georeferenced results (`source` field distinguishes origin) |
-| `heatmaps/` | A only | NMS-merged detection heatmaps from UAV pipeline |
-| `knowledge_base/` | Reserved | CRI expert data (managed by Advisory System team) |
-
----
-
-## Setup & Deployment
+## 🚀 Getting Started
 
 ### Prerequisites
-- Firebase project with **Firestore (Native mode)** and **Cloud Storage**
-- Firebase CLI installed (`npm install -g firebase-tools`)
-- Python 3.11+
+- **Python**: 3.11+
+- **Node.js**: v18.0.0 or higher
+- **Firebase CLI**: `npm install -g firebase-tools`
+- **Java JRE 17+**: Required for local Firestore emulator
 
-### Deploy
+### Local Development Setup
 
-```bash
-# Login to Firebase
-firebase login
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/R26-SE-016/Coconut-Pathology-Detection-Service.git
+   cd Coconut-Pathology-Detection-Service/functions
+   ```
 
-# Deploy Cloud Functions
-firebase deploy --only functions
+2. **Create and activate a virtual environment**:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
 
-# Deploy Firestore rules
-firebase deploy --only firestore:rules
-```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### Local Testing
-
-```bash
-# Start Firebase Emulators
-firebase emulators:start
-
-# Test System B sync endpoint
-curl -X POST http://localhost:5001/<PROJECT_ID>/asia-south1/sync_mobile_diagnostics \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "test_user_001",
-    "device_id": "device_abc",
-    "estate_id": "estate_001",
-    "batch": [{
-      "disease_class": "WCLWD",
-      "confidence": 0.92,
-      "gps": { "lat": 7.2906, "lng": 80.6337 },
-      "captured_at": "2026-05-09T10:30:00Z"
-    }]
-  }'
-```
-
-### Model Training & Notebooks
-
-- **System B (Mobile)**: [Coconut Pathology Training Notebook](file:///f:/GitHub/Research/Coconut-Pathology-Detection-Service/notebooks/coconut_pathology_training.ipynb)
-  - Targets MobileNetV2 with INT8 quantization for <35ms latency.
-  - **Dataset V2**: Now includes 6 classes including a **Healthy** baseline.
-  - Optimized for React Native on-device inference.
-
-### Model Weights
-
-## Security Model
-
-Three-tier role-based access:
-- **Field Officers** — Read/write own diagnostics within their estate
-- **Managers** — Read all diagnostics and heatmaps within their region (cross-estate hotspot visibility)
-- **Admins** — Full read access across all estates
-
-> ⚠️ Authentication module is not yet integrated. Security rules use placeholder `request.auth.token` custom claims.
+4. **Launch the Firebase Emulator Suite**:
+   ```bash
+   cd ..
+   firebase emulators:start --only functions,firestore
+   ```
+   * Functions will listen on `http://127.0.0.1:5001`.
+   * Firestore will listen on `http://127.0.0.1:8080`.
+   * Emulator UI is accessible at [http://127.0.0.1:4000](http://127.0.0.1:4000).
 
 ---
 
-## API Reference
+## 📡 API Request Examples
 
-### POST `/sync_mobile_diagnostics`
+### 1. Run Aerial Spectral Surveillance (`POST /process_aerial_spectral`)
+```http
+POST http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/process_aerial_spectral
+Content-Type: application/json
 
-**Request:**
-```json
 {
-  "user_id": "uid_abc123",
-  "device_id": "device_xyz",
+  "image": "data:image/png;base64,iVBORw0KGgo...",
+  "index_type": "VARI",
+  "estate_id": "estate_001",
+  "gps_bounds": {
+    "lat": 7.2906,
+    "lng": 80.6337,
+    "span_lat": 0.006,
+    "span_lng": 0.006
+  }
+}
+```
+
+### 2. Batch Sync Leaf Diagnostics (`POST /sync_mobile_diagnostics`)
+```http
+POST http://127.0.0.1:5001/coconut-pathology-detection/asia-south1/sync_mobile_diagnostics
+Content-Type: application/json
+
+{
+  "user_id": "usr_789",
+  "device_id": "dev_pixel8",
   "estate_id": "estate_001",
   "batch": [
     {
-      "disease_class": "WCLWD",
-      "confidence": 0.92,
+      "local_id": "scan_001",
+      "disease_class": "bud rot",
+      "confidence": 0.965,
       "gps": { "lat": 7.2906, "lng": 80.6337 },
-      "captured_at": "2026-05-09T10:30:00Z",
-      "image_ref": "mobile_uploads/uid_abc123/img_001.jpg",
-      "local_id": "local-uuid-001"
+      "captured_at": "2026-08-31T08:00:00Z"
     }
   ]
 }
 ```
 
-**Response:**
-```json
-{
-  "synced_count": 1,
-  "failed_ids": [],
-  "server_timestamp": "2026-05-09T18:30:00+00:00"
-}
+---
+
+## ☁️ Production Deployment
+
+Deploy directly to Google Cloud in `asia-south1`:
+
+```bash
+# Deploy all Cloud Functions
+firebase deploy --only functions
+
+# Deploy Firestore security rules
+firebase deploy --only firestore:rules
+
+# Deploy Cloud Storage security rules
+firebase deploy --only storage:rules
 ```
-
-### GET `/get_estate_heatmap?estate_id=estate_001&limit=10`
-
-### GET `/get_diagnostic_history?user_id=uid_abc123&limit=50`
 
 ---
 
-## Team
+## 🔬 Research & Citations
 
-| Member | Component |
-|---|---|
-| Lakshan H.G.J.S. | Detection Pipelines & Backend |
+Developed under the **SaruPol Research Initiative** (**Project R26-SE-016**). All disease classes, thresholding metrics, and agronomic management directives are formulated in accordance with the **Coconut Research Institute (CRI) of Sri Lanka**.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
