@@ -61,6 +61,8 @@ firebase-export*
 *.key
 *.cert
 *.secret
+key.json
+*key*.json
 
 # ── OS & Editor Artifacts ────────────────────────────────────────────
 .DS_Store
