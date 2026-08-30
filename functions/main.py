@@ -53,7 +53,6 @@ options.set_global_options(region="asia-south1")
 
 
 @storage_fn.on_object_finalized(
-    bucket="coconut-pathology-detection.appspot.com",
     memory=options.MemoryOption.GB_4,
     timeout_sec=540,
     cpu=2,
