@@ -20,8 +20,11 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFile
 from scipy.ndimage import distance_transform_edt, gaussian_filter, maximum_filter
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+Image.MAX_IMAGE_PIXELS = None
 
 
 @dataclass
@@ -334,6 +337,9 @@ class SpectralInferencePipeline:
             new_w = max(1, int(img.width * scale))
             new_h = max(1, int(img.height * scale))
             img = img.resize((new_w, new_h), Image.Resampling.BILINEAR)
+
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGB")
 
         img_array = np.array(img, dtype=np.float32)
 
