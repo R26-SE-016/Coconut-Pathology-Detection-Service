@@ -1,8 +1,9 @@
 <div align="center">
 
-<img src="./docs/brand/logo-text.png" alt="සරුපොල් (SaruPol)" width="380" />
+<img src="./docs/brand/logo-icon.png" alt="SaruPol Icon" width="90" />
 <br/>
-<img src="./docs/brand/logo-icon.png" alt="SaruPol Icon" width="80" />
+<img src="./docs/brand/logo-text.png" alt="සරුපොල් (SaruPol)" width="380" />
+
 
 ### 🥥 සරුපොල් (SaruPol) — Coconut Pathology Detection Service
 **Serverless Python Multiscale Computer Vision Backend for Aerial Spectral Surveillance & Edge AI Pathology**
