@@ -196,8 +196,8 @@ class SpectralInferencePipeline:
         valid_peaks = local_max & canopy_mask & (smoothed_edt >= 6.0)
         peak_ys, peak_xs = np.where(valid_peaks)
 
-        base_lat = gps_bounds.get("lat", 7.2906) if gps_bounds else 7.2906
-        base_lng = gps_bounds.get("lng", 80.6337) if gps_bounds else 80.6337
+        base_lat = gps_bounds.get("lat", 7.3275) if gps_bounds else 7.3275
+        base_lng = gps_bounds.get("lng", 79.9880) if gps_bounds else 79.9880
         span_lat = gps_bounds.get("span_lat", 0.005) if gps_bounds else 0.005
         span_lng = gps_bounds.get("span_lng", 0.005) if gps_bounds else 0.005
 
