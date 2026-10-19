@@ -120,7 +120,7 @@ class TestSpectralAlgorithms(unittest.TestCase):
         )
         self.assertIsInstance(result, SpectralPipelineResult)
         self.assertEqual(result.index_type, "NDVI")
-        self.assertIn(result.estate_health_grade, ["A (Optimal)", "B (Good)", "C (Action Required)"])
+        self.assertIn(result.estate_health_grade, ["A (Optimal / Healthy)", "A (Optimal)", "B (Good / Stable)", "B (Good)", "C (Action Required)"])
 
 
 if __name__ == "__main__":

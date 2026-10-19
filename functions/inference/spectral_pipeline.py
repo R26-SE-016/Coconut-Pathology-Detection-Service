@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image, ImageFile
-from scipy.ndimage import distance_transform_edt, gaussian_filter, maximum_filter
+from scipy.ndimage import center_of_mass, distance_transform_edt, gaussian_filter, label, maximum_filter
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = None
@@ -165,36 +165,147 @@ class SpectralInferencePipeline:
 
         return rgb_heatmap
 
+    def _detect_stress_regions(
+        self,
+        raw_index: np.ndarray,
+        canopy_mask: np.ndarray,
+        index_type: str,
+        gps_bounds: Optional[Dict[str, float]] = None,
+        max_hotspots: int = 25,
+    ) -> List[CanopyHotspot]:
+        """
+        Scientific Precision Agriculture Engine:
+        Identifies contiguous stressed canopy zones (hotspots) via Connected Component Analysis.
+        Replaces noisy individual-apex heuristics with robust, area-based spatial stress delineation.
+        """
+        h, w = raw_index.shape
+        is_ndvi = (index_type == "NDVI")
+
+        # Spectral thresholds
+        healthy_cutoff = 0.45 if is_ndvi else 0.015
+        moderate_cutoff = 0.30 if is_ndvi else -0.035
+        severe_cutoff = 0.20 if is_ndvi else -0.060
+
+        # Healthy canopy baseline statistics
+        healthy_mask = (raw_index >= healthy_cutoff) & canopy_mask
+        if np.any(healthy_mask):
+            healthy_vals = raw_index[healthy_mask]
+            mu_healthy = float(np.mean(healthy_vals))
+            sigma_healthy = max(0.03, float(np.std(healthy_vals)))
+        else:
+            canopy_vals = raw_index[canopy_mask] if np.any(canopy_mask) else raw_index
+            mu_healthy = float(np.mean(canopy_vals)) if len(canopy_vals) > 0 else (0.50 if is_ndvi else 0.08)
+            sigma_healthy = 0.04
+
+        # Delineate stressed canopy (smoothed to eliminate single-pixel frond-tip shadows)
+        smoothed_index = gaussian_filter(raw_index, sigma=1.0)
+        stress_binary = canopy_mask & (smoothed_index < moderate_cutoff)
+
+        if not np.any(stress_binary):
+            return []
+
+        # 8-connectivity connected component labeling
+        structure = np.ones((3, 3), dtype=int)
+        labeled_mask, num_features = label(stress_binary, structure=structure)
+
+        if num_features == 0:
+            return []
+
+        base_lat = gps_bounds.get("lat", 7.3275) if gps_bounds else 7.3275
+        base_lng = gps_bounds.get("lng", 79.9880) if gps_bounds else 79.9880
+        span_lat = gps_bounds.get("span_lat", 0.005) if gps_bounds else 0.005
+        span_lng = gps_bounds.get("span_lng", 0.005) if gps_bounds else 0.005
+
+        # Minimum significant patch area (filters out micro-shadows & inter-frond gaps)
+        min_patch_pixels = max(30, int(min(h, w) / 30))
+
+        # Ground Sampling Distance (GSD): ~0.25m per pixel at standard 1024px scale
+        meters_per_pixel = 0.25
+
+        hotspots: List[CanopyHotspot] = []
+
+        # Find center of mass and areas for all features
+        for comp_id in range(1, num_features + 1):
+            comp_pixels = (labeled_mask == comp_id)
+            area_px = int(np.sum(comp_pixels))
+
+            if area_px < min_patch_pixels:
+                continue
+
+            # Centroid
+            cy, cx = center_of_mass(comp_pixels)
+            cy_int, cx_int = int(round(cy)), int(round(cx))
+
+            # Spectral index properties of this stress zone
+            region_vals = raw_index[comp_pixels]
+            region_mean = float(np.mean(region_vals))
+
+            # Statistical anomaly metrics vs estate healthy canopy baseline
+            z_score = (region_mean - mu_healthy) / sigma_healthy
+            rel_drop = max(0.0, ((mu_healthy - region_mean) / (abs(mu_healthy) + self.epsilon)) * 100.0)
+
+            # Filter for true statistical outliers or acute necrosis
+            if not (z_score <= -1.75 or region_mean < severe_cutoff):
+                continue
+
+            # Equivalent circular ground radius
+            radius_m = max(2.5, round(math.sqrt(area_px / math.pi) * meters_per_pixel, 1))
+
+            # Severity classification
+            is_critical = (region_mean < severe_cutoff) or (z_score <= -2.0)
+            if is_critical:
+                sev = "critical"
+                rec = (
+                    f"Acute localized canopy stress zone ({area_px} px², ~{radius_m}m radius, "
+                    f"Z={z_score:.2f}, -{rel_drop:.0f}% deficit). Priority ground scout for Bud Rot / Stem Bleeding."
+                )
+            else:
+                sev = "high"
+                rec = (
+                    f"Chlorotic canopy stress zone ({area_px} px², ~{radius_m}m radius, "
+                    f"Z={z_score:.2f}, -{rel_drop:.0f}% deficit). Inspect for crown mite, nutrient deficiency, or early wilt."
+                )
+
+            # GPS coordinates
+            lat = base_lat + (0.5 - (cy / h)) * span_lat
+            lng = base_lng + ((cx / w) - 0.5) * span_lng
+
+            hs = CanopyHotspot(
+                id=f"zone_{comp_id}_{uuid.uuid4().hex[:6]}",
+                lat=round(lat, 6),
+                lng=round(lng, 6),
+                pixel_x=cx_int,
+                pixel_y=cy_int,
+                mean_index_value=round(region_mean, 3),
+                severity=sev,
+                area_sq_pixels=area_px,
+                radius_meters=radius_m,
+                recommended_action=rec,
+                z_score=round(z_score, 2),
+                relative_drop_pct=round(rel_drop, 1),
+            )
+            hotspots.append(hs)
+
+        # Sort: critical severity first, then by lowest Z-score / largest deficit
+        hotspots.sort(key=lambda x: (0 if x.severity == "critical" else 1, x.z_score if x.z_score is not None else 0.0))
+        return hotspots[:max_hotspots]
+
     def _detect_physical_trees(
         self,
         canopy_mask: np.ndarray,
         gps_bounds: Optional[Dict[str, float]] = None,
     ) -> List[PhysicalPalmTree]:
         """
-        Deterministic Strategy B:
-        Applies Euclidean Distance Transform (EDT) and Local Maxima Peak Extraction
-        on the canonical physical canopy mask.
-        Tree spacing is fixed to the physical agronomic planting grid (~8m = ~26px at 1024 scale).
+        Agronomic Palm Population Estimator (Preserved for backwards compatibility).
+        Estimates discrete palm centroids using regular agronomic grid spacing.
         """
         h, w = canopy_mask.shape
-
-        edt = distance_transform_edt(canopy_mask)
-        if not np.any(edt > 0):
+        canopy_pixels = int(np.sum(canopy_mask))
+        if canopy_pixels == 0:
             return []
 
-        # Smooth to eliminate micro-frond noise and isolate single trunk apices
-        smoothed_edt = gaussian_filter(edt, sigma=2.2)
-
-        # Standard 8m mature coconut palm planting grid (~25-28px at 1024 scale)
-        min_tree_dist_px = max(24, int(min(h, w) / 36))
-        footprint_size = 2 * min_tree_dist_px + 1
-
-        # Extract local maxima peaks
-        local_max = maximum_filter(smoothed_edt, size=footprint_size) == smoothed_edt
-        
-        # Valid coconut trunk apex must have minimum crown depth (>= 6px inside canopy)
-        valid_peaks = local_max & canopy_mask & (smoothed_edt >= 6.0)
-        peak_ys, peak_xs = np.where(valid_peaks)
+        avg_crown_area = 3400  # ~50m² per mature palm at 1024 scale
+        estimated_count = max(1, int(round(canopy_pixels / avg_crown_area)))
 
         base_lat = gps_bounds.get("lat", 7.3275) if gps_bounds else 7.3275
         base_lng = gps_bounds.get("lng", 79.9880) if gps_bounds else 79.9880
@@ -202,121 +313,27 @@ class SpectralInferencePipeline:
         span_lng = gps_bounds.get("span_lng", 0.005) if gps_bounds else 0.005
 
         trees: List[PhysicalPalmTree] = []
-        for idx, (cy, cx) in enumerate(zip(peak_ys, peak_xs)):
-            lat = base_lat + (0.5 - (cy / h)) * span_lat
-            lng = base_lng + ((cx / w) - 0.5) * span_lng
-            crown_r = max(14, int(edt[cy, cx]))
-
-            trees.append(
-                PhysicalPalmTree(
-                    tree_id=idx + 1,
-                    cx=int(cx),
-                    cy=int(cy),
-                    lat=round(lat, 6),
-                    lng=round(lng, 6),
-                    crown_radius_px=crown_r,
-                    crown_area_px=int(math.pi * (crown_r ** 2)),
-                )
-            )
-
+        # Create representative discrete sample points across canopy
+        step = max(24, int(math.sqrt((h * w) / max(1, estimated_count))))
+        idx = 1
+        for y in range(step // 2, h, step):
+            for x in range(step // 2, w, step):
+                if canopy_mask[y, x]:
+                    lat = base_lat + (0.5 - (y / h)) * span_lat
+                    lng = base_lng + ((x / w) - 0.5) * span_lng
+                    trees.append(
+                        PhysicalPalmTree(
+                            tree_id=idx,
+                            cx=x,
+                            cy=y,
+                            lat=round(lat, 6),
+                            lng=round(lng, 6),
+                            crown_radius_px=15,
+                            crown_area_px=avg_crown_area,
+                        )
+                    )
+                    idx += 1
         return trees
-
-    def _profile_tree_anomalies(
-        self,
-        trees: List[PhysicalPalmTree],
-        index_array: np.ndarray,
-        canopy_mask: np.ndarray,
-        index_type: str,
-        max_hotspots: int = 25,
-    ) -> List[CanopyHotspot]:
-        """
-        Strategy C:
-        Evaluates the specific spectral index (NDVI or VARI) across each detected
-        physical tree and computes moving-window relative Z-Scores against neighboring trees.
-        """
-        if not trees:
-            return []
-
-        h, w = index_array.shape
-        tree_scores: List[float] = []
-
-        # Sample spectral index per individual tree disk
-        for t in trees:
-            cx, cy, r = t.cx, t.cy, t.crown_radius_px
-            y0, y1 = max(0, cy - r), min(h, cy + r + 1)
-            x0, x1 = max(0, cx - r), min(w, cx + r + 1)
-
-            yy, xx = np.ogrid[y0:y1, x0:x1]
-            dist = np.sqrt((yy - cy) ** 2 + (xx - cx) ** 2)
-            disk = (dist <= r) & canopy_mask[y0:y1, x0:x1]
-
-            if np.any(disk):
-                score = float(np.mean(index_array[y0:y1, x0:x1][disk]))
-            else:
-                score = float(index_array[cy, cx])
-            tree_scores.append(score)
-
-        # Neighbor spatial search radius (~35m = ~3x tree spacing)
-        neighbor_dist_thresh = max(60, int(min(h, w) / 12))
-
-        is_ndvi = (index_type == "NDVI")
-        healthy_cutoff = 0.52 if is_ndvi else 0.06
-        severe_cutoff = 0.36 if is_ndvi else -0.01
-
-        hotspots: List[CanopyHotspot] = []
-
-        for i, t in enumerate(trees):
-            t_score = tree_scores[i]
-
-            # Find nearest neighbor palms
-            neighbors = []
-            for j, other in enumerate(trees):
-                if i == j:
-                    continue
-                d = math.hypot(t.cx - other.cx, t.cy - other.cy)
-                if d <= neighbor_dist_thresh:
-                    neighbors.append(tree_scores[j])
-
-            if len(neighbors) >= 2:
-                local_mean = float(np.mean(neighbors))
-                local_std = float(np.std(neighbors))
-            else:
-                local_mean = t_score
-                local_std = 0.04
-
-            z_score = (t_score - local_mean) / max(local_std, 0.03)
-            rel_drop = max(0.0, ((local_mean - t_score) / (abs(local_mean) + self.epsilon)) * 100.0)
-
-            # Anomaly criteria
-            is_anomaly = (z_score <= -1.25 and t_score < healthy_cutoff) or (t_score < severe_cutoff)
-
-            if is_anomaly:
-                if z_score <= -2.0 or t_score < severe_cutoff:
-                    sev = "critical"
-                    rec = f"Acute localized anomaly (Tree #{t.tree_id}, Z={z_score:.2f}, -{rel_drop:.0f}% vs neighbors). Priority ground scan for Bud Rot / Stem Bleeding."
-                else:
-                    sev = "high"
-                    rec = f"Localized chlorosis outlier (Tree #{t.tree_id}, Z={z_score:.2f}, -{rel_drop:.0f}% vs neighbors). Inspect for crown mite infestation or localized root decay."
-
-                hs = CanopyHotspot(
-                    id=f"tree_{t.tree_id}_{uuid.uuid4().hex[:6]}",
-                    lat=t.lat,
-                    lng=t.lng,
-                    pixel_x=t.cx,
-                    pixel_y=t.cy,
-                    mean_index_value=round(t_score, 3),
-                    severity=sev,
-                    area_sq_pixels=t.crown_area_px,
-                    radius_meters=max(3.5, round(t.crown_radius_px * 0.28, 1)),
-                    recommended_action=rec,
-                    z_score=round(z_score, 2),
-                    relative_drop_pct=round(rel_drop, 1),
-                )
-                hotspots.append(hs)
-
-        # Sort lowest Z-score (worst drop) first
-        hotspots.sort(key=lambda x: (x.z_score if x.z_score is not None else 0.0, x.mean_index_value))
-        return hotspots[:max_hotspots]
 
     def process(
         self,
@@ -352,16 +369,13 @@ class SpectralInferencePipeline:
             rgb_sum = r_chan + g_chan + b_chan + self.epsilon
             norm_exg = (2.0 * g_chan - r_chan - b_chan) / rgb_sum
             gcc = g_chan / rgb_sum
+            brightness = rgb_sum / 3.0
 
-            # Canonical physical canopy mask — Identical across all spectral modes
-            canopy_mask = (gcc >= 0.350) & (norm_exg >= 0.045) & (g_chan > 28) & (r_chan < 235)
-            del rgb_sum, norm_exg, gcc
+            # Scientific coconut canopy filter (Excludes cast ground shadows & bare sandy soil)
+            canopy_mask = (gcc >= 0.350) & (norm_exg >= 0.040) & (brightness >= 46.0) & (g_chan >= 38.0) & (r_chan <= 175.0)
+            del rgb_sum, norm_exg, gcc, brightness
         else:
             canopy_mask = np.ones((img.height, img.width), dtype=bool)
-
-        # Strategy B: Deterministic Physical Tree Detection on canonical canopy
-        physical_trees = self._detect_physical_trees(canopy_mask, gps_bounds)
-        exact_palm_count = len(physical_trees)
 
         index_type = index_type.upper()
 
@@ -379,15 +393,15 @@ class SpectralInferencePipeline:
             else:
                 red = img_array[:, :, 0] if img_array.ndim == 3 else img_array
                 green = img_array[:, :, 1] if img_array.ndim == 3 else img_array * 0.8
-                nir = np.clip(2.0 * green - 0.5 * red, 0, 255)
+                nir = np.clip(2.2 * green - 0.3 * red, 0, 255)
 
             raw_index = (nir - red) / (nir + red + self.epsilon)
             np.clip(raw_index, -1.0, 1.0, out=raw_index)
 
-            norm_index = np.clip((raw_index - 0.25) / (0.80 - 0.25 + self.epsilon), 0.0, 1.0)
+            norm_index = np.clip((raw_index - 0.20) / (0.80 - 0.20 + self.epsilon), 0.0, 1.0)
             healthy_mask = (raw_index >= 0.45) & canopy_mask
-            moderate_mask = (raw_index >= 0.35) & (raw_index < 0.45) & canopy_mask
-            severe_mask = (raw_index < 0.35) & canopy_mask
+            moderate_mask = (raw_index >= 0.30) & (raw_index < 0.45) & canopy_mask
+            severe_mask = (raw_index < 0.30) & canopy_mask
 
         else:
             if img_array.ndim == 3 and img_array.shape[2] >= 3:
@@ -400,14 +414,17 @@ class SpectralInferencePipeline:
             raw_index = (green - red) / (green + red - blue + self.epsilon)
             np.clip(raw_index, -1.0, 1.0, out=raw_index)
 
-            norm_index = np.clip((raw_index - (-0.02)) / (0.35 - (-0.02) + self.epsilon), 0.0, 1.0)
-            healthy_mask = (raw_index >= 0.04) & canopy_mask
-            moderate_mask = (raw_index >= 0.00) & (raw_index < 0.04) & canopy_mask
-            severe_mask = (raw_index < 0.00) & canopy_mask
+            norm_index = np.clip((raw_index - (-0.035)) / (0.25 - (-0.035) + self.epsilon), 0.0, 1.0)
+            healthy_mask = (raw_index >= 0.015) & canopy_mask
+            moderate_mask = (raw_index >= -0.035) & (raw_index < 0.015) & canopy_mask
+            severe_mask = (raw_index < -0.035) & canopy_mask
 
-        # Strategy C: Profile anomalies on the exact physical trees
-        hotspots = self._profile_tree_anomalies(
-            physical_trees, raw_index, canopy_mask, index_type
+        # Strategy B & C: Area-Based Stress Hotspots Detection via Connected Components
+        hotspots = self._detect_stress_regions(
+            raw_index=raw_index,
+            canopy_mask=canopy_mask,
+            index_type=index_type,
+            gps_bounds=gps_bounds,
         )
 
         # Statistics computation
@@ -428,20 +445,29 @@ class SpectralInferencePipeline:
         moderate_pct = (int(np.sum(moderate_mask)) / canopy_pixels) * 100.0
         severe_pct = (int(np.sum(severe_mask)) / canopy_pixels) * 100.0
 
-        at_risk_palms = len(hotspots)
-        healthy_palms = max(0, exact_palm_count - at_risk_palms)
+        estimated_palms = 0
+        healthy_palms = 0
+        at_risk_palms = 0
 
-        # Biosecurity Estate Health Grade
-        outlier_ratio = at_risk_palms / max(1, exact_palm_count)
-        if outlier_ratio <= 0.04:
-            estate_grade = "A (Optimal)"
-            risk_index = "Low / Healthy"
-        elif outlier_ratio <= 0.12:
-            estate_grade = "B (Good)"
-            risk_index = "Isolated Outliers"
+        # Scientific Biosecurity Estate Health Grade (Precision Ag Remote Sensing Standard)
+        # Evaluates aggregated canopy purity vigor, mean photosynthetic index, and acute necrosis burden
+        is_ndvi = (index_type.upper() == "NDVI")
+        if is_ndvi:
+            is_healthy_vigor = (mean_val >= 0.45 or healthy_pct >= 65.0)
+            is_moderate_vigor = (mean_val >= 0.35 or healthy_pct >= 45.0)
+        else:
+            is_healthy_vigor = (mean_val >= 0.020 or healthy_pct >= 60.0)
+            is_moderate_vigor = (mean_val >= -0.010 or healthy_pct >= 40.0)
+
+        if is_healthy_vigor and severe_pct < 20.0:
+            estate_grade = "A (Optimal / Healthy)"
+            risk_index = "Low Risk — Robust Canopy Vigor"
+        elif is_moderate_vigor and severe_pct < 30.0:
+            estate_grade = "B (Good / Stable)"
+            risk_index = "Moderate — Isolated Frond Stress"
         else:
             estate_grade = "C (Action Required)"
-            risk_index = "Cluster Anomaly Alert"
+            risk_index = "Elevated Risk — Cluster Anomaly Alert"
 
         # Generate Colormapped Heatmap
         rgb_heatmap = self._apply_rdylgn_colormap(norm_index, canopy_mask)
@@ -469,7 +495,7 @@ class SpectralInferencePipeline:
             severe_stress_pct=severe_pct,
             estate_health_grade=estate_grade,
             pathology_risk_index=risk_index,
-            estimated_palms_count=exact_palm_count,
+            estimated_palms_count=estimated_palms,
             healthy_palms_count=healthy_palms,
             at_risk_palms_count=at_risk_palms,
             heatmap_base64=f"data:image/png;base64,{heatmap_b64}",
