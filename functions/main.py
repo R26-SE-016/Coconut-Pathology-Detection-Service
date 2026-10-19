@@ -22,6 +22,7 @@ import os
 import tempfile
 from dataclasses import asdict
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
 
 import firebase_admin
 from firebase_admin import firestore as admin_firestore
@@ -149,7 +150,7 @@ def on_orthomosaic_uploaded(
 
         logger.info(
             f"[System A] Heatmap written → heatmaps/{doc_ref.id} "
-            f"({heatmap.total_detections} detections for estate {estate_id})"
+            f"({len(result.hotspots)} hotspots, {result.estimated_palms_count} palms for estate {estate_id})"
         )
 
     except Exception as exc:
@@ -456,10 +457,121 @@ def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
 
         # Load and preprocess image
         img_bytes = image_file.read()
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-        img = img.resize((224, 224), Image.Resampling.NEAREST)
-        
-        # Convert to numpy and match the TFLite model's expected UINT8 input
+        raw_img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        img = raw_img.resize((224, 224), Image.Resampling.NEAREST)
+        arr = np.array(img, dtype=np.float32)
+
+        # ── TIER 1: Botanical Domain & Texture Pre-Filter ────────────────────
+        # 1. Monochromatic / Blank Frame Detection (std dev check)
+        img_std = float(np.std(arr))
+        if img_std < 14.0:
+            return https_fn.Response(
+                json.dumps({
+                    "disease_class": "undetected",
+                    "confidence": 0.0,
+                    "status": "unrecognized",
+                    "is_valid_specimen": False,
+                    "diagnosis": "Non-Coconut Specimen / Undetected",
+                    "message": "Monochromatic or blank image detected. No plant structure present.",
+                    "inference_time_ms": int((time.time() - start_time) * 1000),
+                    "all_predictions": [],
+                }),
+                status=200,
+                content_type="application/json",
+            )
+
+        # 2. Structural Surface Texture / Vein Density (Spatial Gradient)
+        r = arr[:, :, 0] / 255.0
+        g = arr[:, :, 1] / 255.0
+        b = arr[:, :, 2] / 255.0
+        gray = 0.299 * r + 0.587 * g + 0.114 * b
+        diff_x = np.abs(gray[:, 1:] - gray[:, :-1])
+        diff_y = np.abs(gray[1:, :] - gray[:-1, :])
+        texture_score = float(np.mean(diff_x) + np.mean(diff_y))
+
+        if texture_score < 0.012:
+            return https_fn.Response(
+                json.dumps({
+                    "disease_class": "undetected",
+                    "confidence": 0.0,
+                    "status": "unrecognized",
+                    "is_valid_specimen": False,
+                    "diagnosis": "Non-Coconut Specimen / Undetected",
+                    "message": "Insufficient anatomical surface texture or leaf vein pattern detected.",
+                    "inference_time_ms": int((time.time() - start_time) * 1000),
+                    "all_predictions": [],
+                }),
+                status=200,
+                content_type="application/json",
+            )
+
+        # 3. Botanical Foliage, Bark & Synthetic Color Discrimination
+        hsv_arr = np.array(img.convert("HSV"), dtype=np.float32)
+        h_deg = hsv_arr[:, :, 0] * (360.0 / 255.0)  # Map 0-255 to 0°-360°
+        s_pct = hsv_arr[:, :, 1] / 255.0
+        v_pct = hsv_arr[:, :, 2] / 255.0
+
+        # (a) Living chlorophyll green foliage (G dominant, H in [55°, 165°], S >= 0.12, V >= 0.12)
+        is_chlorophyll = (g > r * 1.02) & (g > b * 1.02) & (h_deg >= 55.0) & (h_deg <= 165.0) & (s_pct >= 0.12) & (v_pct >= 0.12)
+        chlorophyll_ratio = float(np.sum(is_chlorophyll) / is_chlorophyll.size)
+
+        # (b) Natural earthy bark / necrotic tissue (H in [15°, 48°], natural earthy S in [0.15, 0.75], natural V in [0.10, 0.75])
+        is_earthy_bark = (h_deg >= 15.0) & (h_deg <= 48.0) & (s_pct >= 0.15) & (s_pct <= 0.75) & (v_pct >= 0.10) & (v_pct <= 0.75)
+        bark_ratio = float(np.sum(is_earthy_bark) / is_earthy_bark.size)
+
+        botanical_ratio = chlorophyll_ratio + bark_ratio
+
+        # (c) Synthetic / Graphic illustration detection (e.g. cartoon neon yellow, poster colors)
+        is_synthetic = (
+            ((h_deg >= 45.0) & (h_deg <= 65.0) & (s_pct > 0.75) & (v_pct > 0.75)) |  # Neon yellow poster
+            ((h_deg >= 170.0) & (h_deg <= 260.0) & (s_pct > 0.50)) |                  # Synthetic cyan/blue
+            ((h_deg >= 280.0) & (h_deg <= 345.0) & (s_pct > 0.50))                   # Synthetic purple/magenta
+        )
+        synthetic_ratio = float(np.sum(is_synthetic) / is_synthetic.size)
+
+        if synthetic_ratio > 0.18:
+            return https_fn.Response(
+                json.dumps({
+                    "disease_class": "undetected",
+                    "confidence": 0.0,
+                    "status": "unrecognized",
+                    "is_valid_specimen": False,
+                    "diagnosis": "Non-Coconut Specimen / Undetected",
+                    "message": f"Artificial graphic or synthetic illustration detected ({synthetic_ratio * 100:.1f}% synthetic graphic color).",
+                    "inference_time_ms": int((time.time() - start_time) * 1000),
+                    "all_predictions": [],
+                    "validation_metrics": {
+                        "synthetic_ratio": round(synthetic_ratio, 3),
+                        "botanical_ratio": round(botanical_ratio, 3),
+                    },
+                }),
+                status=200,
+                content_type="application/json",
+            )
+
+        if botanical_ratio < 0.15 or (chlorophyll_ratio < 0.08 and bark_ratio < 0.15):
+            return https_fn.Response(
+                json.dumps({
+                    "disease_class": "undetected",
+                    "confidence": 0.0,
+                    "status": "unrecognized",
+                    "is_valid_specimen": False,
+                    "diagnosis": "Non-Coconut Specimen / Undetected",
+                    "message": f"Image does not exhibit genuine coconut foliage or palm tissue (chlorophyll ratio: {chlorophyll_ratio * 100:.1f}%, vegetation ratio: {botanical_ratio * 100:.1f}%).",
+                    "inference_time_ms": int((time.time() - start_time) * 1000),
+                    "all_predictions": [],
+                    "validation_metrics": {
+                        "chlorophyll_ratio": round(chlorophyll_ratio, 3),
+                        "botanical_ratio": round(botanical_ratio, 3),
+                        "texture_score": round(texture_score, 4),
+                        "img_std": round(img_std, 2),
+                    },
+                }),
+                status=200,
+                content_type="application/json",
+            )
+
+        # ── TIER 2: Deep Learning Inference (MobileNetV2-INT8) ────────────────
         input_data = np.expand_dims(np.array(img, dtype=np.uint8), axis=0)
 
         # Load TFLite model
@@ -487,13 +599,10 @@ def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
             'stembleeding',
         ]
         
-        # INT8 outputs are usually UINT8 (0-255). Convert to 0-1 probability.
-        # We check the dtype of the output tensor to decide how to process.
         output_dtype = output_details[0]['dtype']
         
         def to_prob(v):
             if output_dtype == np.uint8 or output_dtype == np.int8:
-                # Quantized: map 0-255 to 0-1 (simple approximation for Softmax)
                 return float(v) / 255.0
             return float(v)
 
@@ -501,17 +610,64 @@ def predict_mobile_disease(req: https_fn.Request) -> https_fn.Response:
         top_confidence = to_prob(probs[max_idx])
         
         all_predictions = [
-            {"class": cls_name, "confidence": to_prob(prob)}
+            {"class": cls_name, "confidence": round(to_prob(prob), 4)}
             for cls_name, prob in zip(CLASS_NAMES, probs)
         ]
         all_predictions.sort(key=lambda x: x["confidence"], reverse=True)
 
+        # ── TIER 3: Softmax Entropy & Confidence Margin Gate ──────────────────
+        # Calculate normalized Shannon entropy to detect flat/uniform uncertainty
+        clean_probs = [max(p["confidence"], 1e-7) for p in all_predictions]
+        total_p = sum(clean_probs)
+        normalized_probs = [p / total_p for p in clean_probs]
+        shannon_entropy = -sum(p * np.log(p) for p in normalized_probs)
+        max_entropy = np.log(len(CLASS_NAMES))
+        norm_entropy = float(shannon_entropy / max_entropy)
+
+        top_conf = all_predictions[0]["confidence"] if all_predictions else 0.0
+        second_conf = all_predictions[1]["confidence"] if len(all_predictions) > 1 else 0.0
+        conf_margin = top_conf - second_conf
+
+        CONFIDENCE_THRESHOLD = 0.70
+        MARGIN_THRESHOLD = 0.30
+        MAX_ENTROPY_THRESHOLD = 0.45
+
+        # Strict closed-set validation: genuine diseases have top_conf >= 0.70, margin >= 0.30, entropy <= 0.45
+        if top_conf < CONFIDENCE_THRESHOLD or conf_margin < MARGIN_THRESHOLD or norm_entropy > MAX_ENTROPY_THRESHOLD:
+            return https_fn.Response(
+                json.dumps({
+                    "disease_class": "undetected",
+                    "confidence": round(float(top_conf), 4),
+                    "status": "unrecognized",
+                    "is_valid_specimen": False,
+                    "diagnosis": "Non-Coconut Specimen / Undetected",
+                    "message": f"Diagnostic uncertainty high (confidence: {top_conf * 100:.1f}%, margin: {conf_margin * 100:.1f}%, entropy: {norm_entropy:.2f}). Specimen cannot be reliably attributed to a known CRI coconut pathogen.",
+                    "inference_time_ms": inference_time_ms,
+                    "all_predictions": all_predictions,
+                    "validation_metrics": {
+                        "conf_margin": round(conf_margin, 3),
+                        "norm_entropy": round(norm_entropy, 3),
+                        "top_confidence": round(float(top_conf), 4),
+                    },
+                }),
+                status=200,
+                content_type="application/json",
+            )
+
+        # Valid coconut specimen with confident diagnosis
+        is_healthy = CLASS_NAMES[max_idx] == "healthy leaves"
         return https_fn.Response(
             json.dumps({
                 "disease_class": CLASS_NAMES[max_idx],
-                "confidence": top_confidence,
+                "confidence": round(float(top_confidence), 4),
+                "status": "healthy" if is_healthy else "diseased",
+                "is_valid_specimen": True,
                 "all_predictions": all_predictions,
-                "inference_time_ms": inference_time_ms
+                "inference_time_ms": inference_time_ms,
+                "validation_metrics": {
+                    "botanical_ratio": round(botanical_ratio, 3),
+                    "norm_entropy": round(norm_entropy, 3),
+                },
             }),
             status=200,
             content_type="application/json",
